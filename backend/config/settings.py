@@ -69,15 +69,32 @@ TEMPLATES = [
 WSGI_APPLICATION = "config.wsgi.application"
 
 if config("DB_ENGINE", default="") == "mysql":
+    db_host = config("DB_HOST", default="127.0.0.1")
+    options = {"charset": "utf8mb4"}
+
+    # TiDB Cloud / remote databases require SSL (Connections using insecure transport are prohibited)
+    use_ssl = config("DB_SSL", default=False, cast=bool) or (db_host not in ("127.0.0.1", "localhost", ""))
+    if use_ssl:
+        import certifi
+
+        ca_path = config("DB_SSL_CA", default="")
+        if not ca_path and (BASE_DIR / "ca.pem").exists():
+            ca_path = str(BASE_DIR / "ca.pem")
+        if not ca_path:
+            ca_path = certifi.where()
+
+        options["ssl"] = {"ca": ca_path}
+        options["ssl_mode"] = "VERIFY_IDENTITY"
+
     DATABASES = {
         "default": {
             "ENGINE": "django.db.backends.mysql",
             "NAME": config("DB_NAME", default="orbit"),
             "USER": config("DB_USER", default="root"),
             "PASSWORD": config("DB_PASSWORD", default=""),
-            "HOST": config("DB_HOST", default="127.0.0.1"),
+            "HOST": db_host,
             "PORT": config("DB_PORT", default="3306"),
-            "OPTIONS": {"charset": "utf8mb4"},
+            "OPTIONS": options,
         }
     }
 else:

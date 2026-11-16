@@ -4,5 +4,6 @@ Markdown>=3.11
 nh3>=0.3
 python-decouple>=3.8
 mysqlclient>=2.2
+certifi>=2024.0.0
 gunicorn>=22.0
 whitenoise>=6.6
