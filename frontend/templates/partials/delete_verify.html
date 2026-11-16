@@ -1,0 +1,12 @@
+{# GitHub-style delete: type the exact name to unlock the button. The server checks it again. Params: title, what, expected, delete_url #}
+<section id="delete" class="card border-danger/30 p-6">
+  <h2 class="font-display text-lg font-semibold text-danger">{{ title }}</h2>
+  <p class="mt-1 text-sm text-muted">{{ what }} This cannot be undone.</p>
+  <form method="post" action="{{ delete_url }}" class="mt-5 space-y-3"
+        data-confirm="This permanently deletes it and cannot be undone." data-confirm-title="{{ title }}?" data-confirm-label="Delete forever">
+    {% csrf_token %}
+    <label class="label text-sm" for="del-confirm">To confirm, type <span class="rounded-md bg-raised px-1.5 py-0.5 font-mono text-fg">{{ expected }}</span> below</label>
+    <input id="del-confirm" name="confirm" class="input" autocomplete="off" autocapitalize="off" spellcheck="false" required data-match="{{ expected }}">
+    <button class="btn btn-danger w-full sm:w-auto" disabled data-match-target>{% include "partials/icon.html" with name="trash" %}I understand, {{ title|lower }}</button>
+  </form>
+</section>

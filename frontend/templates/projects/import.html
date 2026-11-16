@@ -1,0 +1,46 @@
+{% extends "base.html" %}
+{% block title %}Import from GitHub{% endblock %}
+{% block content %}
+<div class="page-head">
+  <div>
+    <p class="eyebrow"><a href="{% url 'projects:list' %}">Projects</a></p>
+    <h1 class="page-title">Import from GitHub</h1>
+    <p class="mt-1 text-sm text-muted">Pick a repository. Orbit creates a project with its description, README, links and recent commits.</p>
+  </div>
+</div>
+{% if needs_github or github_error %}{% include "insights/_connect.html" %}{% else %}
+<div class="grid gap-6 xl:grid-cols-[1fr_340px]">
+  <section>
+    <div class="mb-3 flex items-center gap-3">
+      <input type="search" class="input max-w-sm" placeholder="Filter repositories…" data-filter="#repo-list" aria-label="Filter repositories">
+      <span class="text-xs text-muted">{{ repos|length }} not yet imported</span>
+    </div>
+    <ul id="repo-list" class="grid gap-3 lg:grid-cols-2">
+      {% for r in repos %}
+        <li class="card flex items-center gap-4 p-4" data-filter-text="{{ r.nameWithOwner|lower }} {{ r.description|default:''|lower }}">
+          <div class="min-w-0 flex-1">
+            <p class="truncate font-display font-semibold">{{ r.name }} {% if r.isPrivate %}<span class="badge badge-plain ml-1">Private</span>{% endif %}</p>
+            <p class="truncate text-xs text-muted">{{ r.description|default:r.nameWithOwner }}</p>
+          </div>
+          <form method="post">{% csrf_token %}<input type="hidden" name="repo" value="{{ r.nameWithOwner }}">
+            <button class="btn btn-sm">{% include "partials/icon.html" with name="import" cls="h-3.5 w-3.5" %}Import</button></form>
+        </li>
+      {% empty %}
+        <li class="card p-8 text-center text-sm text-muted lg:col-span-2">All your repositories are already in Orbit.</li>
+      {% endfor %}
+    </ul>
+  </section>
+  <aside class="card h-fit p-5">
+    <p class="font-display font-semibold">Import any repo</p>
+    <p class="mt-1 text-sm text-muted">Not in the list (e.g. an organisation repo)? Enter it directly.</p>
+    <form method="post" class="mt-4 space-y-2">
+      {% csrf_token %}
+      <input name="repo" class="input" placeholder="owner/repo or GitHub URL" required maxlength="140" aria-label="Repository">
+      {% for e in form.repo.errors %}<p class="error">{{ e }}</p>{% endfor %}
+      <button class="btn btn-primary w-full">Import</button>
+    </form>
+    <p class="mt-4 text-xs text-muted">Private repos need a key with the <code>repo</code> scope in <a href="{% url 'settings' %}?tab=keys">Settings › Keys</a>.</p>
+  </aside>
+</div>
+{% endif %}
+{% endblock %}

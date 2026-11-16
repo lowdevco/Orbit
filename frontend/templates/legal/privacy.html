@@ -1,0 +1,75 @@
+{% extends "legal/base.html" %}
+{% block title %}Privacy Policy{% endblock %}
+{% block heading %}Privacy Policy{% endblock %}
+{% block body %}
+<p>This policy explains what personal data Orbit collects, why, and the choices you have. Orbit is operated by <strong>{{ operator }}</strong> in {{ country }}. We act as the Data Fiduciary for your personal data under India's Digital Personal Data Protection Act, 2023 ("DPDP Act").</p>
+
+<h2>1. Data we collect</h2>
+<h3>From your sign-in provider</h3>
+<ul>
+  <li><strong>Google:</strong> your name, email address and profile picture.</li>
+  <li><strong>GitHub:</strong> your username, name, email address, avatar, and an access token with the permissions <code>read:user</code>, <code>user:email</code> and <code>public_repo</code>.</li>
+</ul>
+<h3>What you create</h3>
+<ul>
+  <li>Projects, milestones, tasks, updates, links, notes and time entries.</li>
+  <li>An optional GitHub personal access token, if you add one in Settings › Keys. It is stored encrypted.</li>
+</ul>
+<h3>GitHub data fetched for you</h3>
+<ul>
+  <li>Your profile, repositories, contribution history, issues and pull requests that involve you, and your recent GitHub events. We fetch these only to show them to you, and we cache them for about 15 minutes.</li>
+</ul>
+<h3>Technical data</h3>
+<ul>
+  <li>A session cookie (keeps you signed in) and a CSRF cookie (protects forms). We use no advertising, analytics or tracking cookies.</li>
+  <li>Your IP address, used briefly for rate limiting and security, and in standard server logs.</li>
+</ul>
+
+<h2>2. How we use your data</h2>
+<ul>
+  <li>To run Orbit: show your projects and notes, sync commits, display your GitHub information, and create GitHub issues when you ask.</li>
+  <li>To keep Orbit secure: preventing abuse, rate limiting and investigating misuse.</li>
+</ul>
+<p>We do <strong>not</strong> sell your data, show you ads, or use your data to build marketing profiles.</p>
+
+<h2>3. Consent</h2>
+<p>We process your personal data on the basis of your consent, which you give when you sign in and agree to these terms. You can withdraw consent at any time by disconnecting a provider or deleting your account in Settings. Withdrawing consent does not affect processing that happened before.</p>
+
+<h2>4. Sharing</h2>
+<ul>
+  <li><strong>GitHub and Google</strong> receive requests from Orbit when you sign in or when Orbit calls the GitHub API for you.</li>
+  <li><strong>Our hosting provider</strong> stores Orbit's database and servers on our behalf.</li>
+  <li><strong>Public share links:</strong> if you turn one on, a project's read-only page (progress, milestones, tasks, updates, README) is visible to anyone with the link.</li>
+  <li><strong>Legal requirements:</strong> we may disclose data if required by law or a valid order of a competent authority in {{ country }}.</li>
+</ul>
+
+<h2>5. Security</h2>
+<ul>
+  <li>Every page and API in Orbit only returns data you own. Other users cannot see your content.</li>
+  <li>GitHub keys are encrypted at rest. Connections use HTTPS in production.</li>
+  <li>We use a strict Content Security Policy, CSRF protection and rate limiting.</li>
+</ul>
+<p>No system is perfectly secure. If we become aware of a personal data breach affecting you, we will notify you and the Data Protection Board of India as the DPDP Act requires.</p>
+
+<h2>6. Retention</h2>
+<p>We keep your data while your account exists. Cached GitHub data expires after about 15 minutes. When you delete your account, your projects, notes, keys, provider tokens and cached data are removed from our database immediately.</p>
+
+<h2>7. Your rights</h2>
+<p>Under the DPDP Act you can:</p>
+<ul>
+  <li><strong>Access</strong> your data. Export everything from Settings › Your data.</li>
+  <li><strong>Correct</strong> it. Edit anything in the app, or contact us.</li>
+  <li><strong>Erase</strong> it. Delete items, or your whole account, in Settings › Account.</li>
+  <li><strong>Raise a grievance</strong> with us. If it isn't resolved, you can complain to the Data Protection Board of India.</li>
+  <li><strong>Nominate</strong> another person to exercise these rights if you die or become incapacitated.</li>
+</ul>
+
+<h2>8. Children</h2>
+<p>Orbit is not intended for anyone under 18 without verifiable consent from a parent or lawful guardian. If you believe a child has used Orbit without such consent, contact us and we will delete their data.</p>
+
+<h2>9. Changes</h2>
+<p>We will update the effective date above when this policy changes, and notify you in the app of material changes.</p>
+
+<h2>10. Contact and grievance officer</h2>
+<p>{{ operator }}, {{ country }}<br>Email: <a href="mailto:{{ email }}">{{ email }}</a></p>
+{% endblock %}

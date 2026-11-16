@@ -1,0 +1,23 @@
+{% load socialaccount %}
+<div class="card relative mx-auto max-w-xl overflow-hidden p-10 text-center">
+  <div class="mx-auto grid h-14 w-14 place-items-center rounded-2xl bg-accent/15 text-accent-hi">{% include "partials/icon.html" with name="github" cls="h-7 w-7" %}</div>
+  {% if needs_github %}
+    <h2 class="mt-4 font-display text-xl font-semibold">Connect GitHub to unlock this</h2>
+    <p class="mt-2 text-sm text-muted">Link your GitHub account in one click, or paste a personal access token in Settings › Keys.</p>
+    <div class="mt-6 flex flex-wrap justify-center gap-2">
+      {% get_providers as providers %}
+      {% for p in providers %}{% if p.id == "github" %}
+        <form method="post" action="{% provider_login_url 'github' process='connect' next=request.path %}">{% csrf_token %}
+          <button class="btn btn-primary">{% include "partials/icon.html" with name="github" %}Connect GitHub</button></form>
+      {% endif %}{% endfor %}
+      <a href="{% url 'settings' %}?tab=keys" class="btn">{% include "partials/icon.html" with name="key" %}Add a key</a>
+    </div>
+  {% else %}
+    <h2 class="mt-4 font-display text-xl font-semibold">Couldn't reach GitHub</h2>
+    <p class="mt-2 text-sm text-danger">{{ github_error }}</p>
+    <div class="mt-6 flex justify-center gap-2">
+      <form method="post" action="{% url 'insights:refresh' %}">{% csrf_token %}<button class="btn">Try again</button></form>
+      <a href="{% url 'settings' %}?tab=keys" class="btn">Settings › Keys</a>
+    </div>
+  {% endif %}
+</div>

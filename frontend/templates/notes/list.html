@@ -1,0 +1,42 @@
+{% extends "base.html" %}
+{% block title %}Notes{% endblock %}
+{% block content %}
+<div class="flex flex-wrap items-center justify-between gap-3 mb-5">
+  <h1 class="page-title">Notes</h1>
+  <a href="{% url 'notes:create' %}" class="btn btn-primary">{% include "partials/icon.html" with name="plus" %}New note</a>
+</div>
+<form class="flex flex-wrap gap-2 mb-4" role="search">
+  <input name="q" value="{{ q }}" class="input flex-1 min-w-48" placeholder="Search notes…" aria-label="Search notes">
+  {% if tag %}<input type="hidden" name="tag" value="{{ tag }}">{% endif %}
+  <button class="btn">Search</button>
+</form>
+{% if all_tags %}
+<div class="flex flex-wrap gap-2 mb-5">
+  <a href="?{% if q %}q={{ q|urlencode }}{% endif %}" class="badge {% if not tag %}border-accent text-accent{% else %}badge-muted{% endif %} no-underline">All</a>
+  {% for t in all_tags %}
+    <a href="?tag={{ t|urlencode }}{% if q %}&q={{ q|urlencode }}{% endif %}" class="badge {% if tag == t %}border-accent text-accent{% else %}badge-muted{% endif %} no-underline">#{{ t }}</a>
+  {% endfor %}
+</div>
+{% endif %}
+{% if notes %}
+<div class="grid sm:grid-cols-2 xl:grid-cols-3 gap-4">
+  {% for n in notes %}
+    <article class="card p-4 flex flex-col gap-2 hover:border-muted transition-colors">
+      <div class="flex items-start gap-2">
+        <a href="{{ n.get_absolute_url }}" class="font-semibold flex-1 break-words">{{ n.title }}</a>
+        <form method="post" action="{% url 'notes:pin' n.pk %}">{% csrf_token %}<input type="hidden" name="next" value="list">
+          <button class="btn btn-ghost btn-sm {% if n.pinned %}text-warn{% endif %}" aria-label="{% if n.pinned %}Unpin{% else %}Pin{% endif %}" title="{% if n.pinned %}Unpin{% else %}Pin{% endif %}">{% include "partials/icon.html" with name="pin" cls="h-3.5 w-3.5" %}</button></form>
+      </div>
+      <p class="text-sm text-muted line-clamp-3 whitespace-pre-line">{{ n.body|truncatechars:220 }}</p>
+      <div class="mt-auto flex flex-wrap items-center gap-2 pt-2 text-xs text-muted">
+        {% for t in n.tag_list %}<span class="badge badge-muted">#{{ t }}</span>{% endfor %}
+        {% if n.project %}<span>· {{ n.project.name }}</span>{% endif %}
+        <span class="ml-auto">{{ n.updated_at|timesince }} ago</span>
+      </div>
+    </article>
+  {% endfor %}
+</div>
+{% else %}
+<div class="card p-10 text-center text-sm text-muted">{% if q or tag %}No notes match.{% else %}No notes yet. <a href="{% url 'notes:create' %}">Write your first</a>.{% endif %}</div>
+{% endif %}
+{% endblock %}

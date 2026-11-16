@@ -1,0 +1,23 @@
+{% extends "base.html" %}
+{% block title %}Search{% endblock %}
+{% block content %}
+<h1 class="page-title mb-6">Search</h1>
+<form class="flex gap-2 mb-6" role="search">
+  <input name="q" value="{{ q }}" class="input" placeholder="Search projects, notes, tasks, updates…" autofocus aria-label="Search">
+  <button class="btn btn-primary">Search</button>
+</form>
+{% if q %}
+  <p class="text-sm text-muted mb-3">{{ results|length }} result{{ results|pluralize }} for “{{ q }}”</p>
+  <ul class="card divide-y divide-line">
+    {% for r in results %}
+      <li class="flex items-center gap-3 px-4 py-3">
+        <span class="badge badge-muted w-16 justify-center">{{ r.type }}</span>
+        <a href="{{ r.url }}" class="flex-1 truncate text-fg">{{ r.title }}</a>
+        <span class="text-xs text-muted truncate">{{ r.subtitle }}</span>
+      </li>
+    {% empty %}
+      <li class="px-4 py-8 text-center text-sm text-muted">Nothing found.</li>
+    {% endfor %}
+  </ul>
+{% endif %}
+{% endblock %}

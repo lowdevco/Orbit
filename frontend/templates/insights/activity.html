@@ -1,0 +1,41 @@
+{% extends "base.html" %}
+{% block title %}GitHub activity{% endblock %}
+{% block content %}
+<div class="page-head">
+  <div>
+    <p class="eyebrow">GitHub</p>
+    <h1 class="page-title">Activity</h1>
+    <p class="mt-1 text-sm text-muted">Your recent pushes, stars and releases.</p>
+  </div>
+  {% if not needs_github and not github_error %}
+  <form method="post" action="{% url 'insights:refresh' %}">{% csrf_token %}<input type="hidden" name="next" value="insights:activity">
+    <button class="btn">{% include "partials/icon.html" with name="refresh" %}Refresh</button></form>
+  {% endif %}
+</div>
+{% if needs_github or github_error %}{% include "insights/_connect.html" %}{% else %}
+<nav class="pills mb-6" aria-label="Filter activity">
+  <a class="tab {% if not kind %}active{% endif %}" href="?">All</a>
+  <a class="tab {% if kind == 'push' %}active{% endif %}" href="?kind=push">{% include "partials/icon.html" with name="commit" %}Pushes</a>
+  <a class="tab {% if kind == 'star' %}active{% endif %}" href="?kind=star">{% include "partials/icon.html" with name="star" %}Stars</a>
+  <a class="tab {% if kind == 'release' %}active{% endif %}" href="?kind=release">{% include "partials/icon.html" with name="flag" %}Releases</a>
+</nav>
+{% if items %}
+  <div class="grid gap-6 xl:grid-cols-[1fr_320px]">
+    <section class="card p-3">
+      <ul class="space-y-1">
+        {% for it in items %}
+          {% ifchanged it.when.date %}<li class="px-2 pb-1 pt-3 text-xs font-medium uppercase tracking-wider text-muted">{{ it.when|date:"l, M j" }}</li>{% endifchanged %}
+          {% include "insights/_activity_item.html" %}
+        {% endfor %}
+      </ul>
+    </section>
+    <aside class="card h-fit p-5 text-sm text-muted">
+      <p class="font-display font-semibold text-fg">About this feed</p>
+      <p class="mt-2">GitHub keeps roughly the last 90 days of events. Orbit refreshes it every 15 minutes, or when you press Refresh.</p>
+    </aside>
+  </div>
+{% else %}
+  <div class="card p-10 text-center text-sm text-muted">No {% if kind %}{{ kind }} {% endif %}activity in the last 90 days.</div>
+{% endif %}
+{% endif %}
+{% endblock %}

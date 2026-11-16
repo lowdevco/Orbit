@@ -1,0 +1,19 @@
+<li>
+  <a href="{{ it.url }}" target="_blank" rel="noopener" class="flex items-start gap-3 rounded-lg px-2 py-2 text-sm text-fg hover:bg-raised">
+    <span class="mt-0.5 grid h-7 w-7 shrink-0 place-items-center rounded-lg
+      {% if it.kind == 'push' %}bg-accent/15 text-accent-hi{% elif it.kind == 'star' %}bg-warn/15 text-warn{% else %}bg-ok/15 text-ok{% endif %}">
+      {% if it.kind == "push" %}{% include "partials/icon.html" with name="commit" cls="h-4 w-4" %}{% elif it.kind == "star" %}{% include "partials/icon.html" with name="star" cls="h-4 w-4" %}{% else %}{% include "partials/icon.html" with name="flag" cls="h-4 w-4" %}{% endif %}
+    </span>
+    <span class="min-w-0 flex-1">
+      <span class="block truncate">
+        {% if it.kind == "push" %}Pushed{% if it.count %} {{ it.count }} commit{{ it.count|pluralize }}{% endif %} to <span class="font-medium">{{ it.repo }}</span>{% if it.branch and not compact %} <span class="text-muted">· {{ it.branch }}</span>{% endif %}
+        {% elif it.kind == "star" %}Starred <span class="font-medium">{{ it.repo }}</span>
+        {% else %}Released <span class="font-medium">{{ it.name }}</span> in {{ it.repo }}{% endif %}
+      </span>
+      {% if not compact and it.commits %}
+        {% for c in it.commits %}<span class="block truncate text-xs text-muted"><code class="text-accent-hi">{{ c.sha }}</code> {{ c.message }}</span>{% endfor %}
+      {% endif %}
+      <span class="block text-xs text-muted">{{ it.when|timesince }} ago</span>
+    </span>
+  </a>
+</li>

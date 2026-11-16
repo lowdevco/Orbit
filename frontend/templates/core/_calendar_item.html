@@ -1,0 +1,9 @@
+<a href="{{ it.url }}" title="{{ it.project.name }}: {{ it.label }} ({{ it.detail }})"
+   class="flex items-center gap-1.5 rounded-lg px-1.5 py-1 text-xs text-fg hover:bg-raised {% if it.done %}text-muted line-through{% endif %}"
+   {% if not it.done %}style="background: color-mix(in oklab, {{ it.project.swatch }} 14%, transparent)"{% endif %}>
+  {% if it.kind == "milestone" %}<span class="shrink-0 text-accent-hi">{% include "partials/icon.html" with name="milestone" cls="h-3.5 w-3.5" %}</span>
+  {% elif it.kind == "target" %}<span class="shrink-0 text-warn">{% include "partials/icon.html" with name="flag" cls="h-3.5 w-3.5" %}</span>
+  {% else %}<span class="h-1.5 w-1.5 shrink-0 rounded-full" style="background: {{ it.project.swatch }}"></span>{% endif %}
+  <span class="truncate">{{ it.label }}</span>
+  {% if it.priority %}<span class="ml-auto shrink-0 prio-{{ it.priority }}">{% include "partials/icon.html" with name="flag" cls="h-3 w-3" %}</span>{% endif %}
+</a>

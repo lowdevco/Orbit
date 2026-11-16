@@ -1,0 +1,35 @@
+{% extends "base.html" %}
+{% block title %}Edit task{% endblock %}
+{% block content %}
+<div class="mx-auto max-w-3xl">
+  <div class="page-head">
+    <div>
+      <p class="eyebrow"><a href="{{ project.get_absolute_url }}?tab=board">{{ project.name }}</a> · Task</p>
+      <h1 class="page-title break-words">{{ task.title }}</h1>
+    </div>
+  </div>
+  <form method="post" class="card space-y-5 p-6">
+    {% csrf_token %}
+    <input type="hidden" name="next" value="{{ request.GET.next|default:'' }}">
+    {% include "partials/field.html" with field=form.title %}
+    <div class="grid gap-4 sm:grid-cols-3">
+      {% include "partials/field.html" with field=form.status %}
+      {% include "partials/field.html" with field=form.priority %}
+      {% include "partials/field.html" with field=form.due_date %}
+    </div>
+    <div class="grid gap-4 sm:grid-cols-2">
+      {% include "partials/field.html" with field=form.milestone %}
+      {% include "partials/field.html" with field=form.labels %}
+    </div>
+    {% include "partials/field.html" with field=form.description %}
+    <div class="flex flex-wrap gap-2 border-t border-line-soft pt-5">
+      <button class="btn btn-primary">Save task</button>
+      <a href="{{ project.get_absolute_url }}?tab=board" class="btn">Cancel</a>
+    </div>
+  </form>
+  <form method="post" action="{% url 'projects:task_delete' project.slug task.pk %}" class="mt-4 flex justify-end" data-confirm="Delete this task?">
+    {% csrf_token %}<input type="hidden" name="next" value="{{ project.get_absolute_url }}?tab=board">
+    <button class="btn btn-ghost btn-sm text-danger">{% include "partials/icon.html" with name="trash" cls="h-3.5 w-3.5" %}Delete task</button>
+  </form>
+</div>
+{% endblock %}

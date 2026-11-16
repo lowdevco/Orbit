@@ -1,0 +1,7 @@
+{% if messages %}
+{# Django messages are handed to the toast system (static/js/orbit.js). escapejs output is valid JSON and safe inside <script>. #}
+<script type="application/json" id="server-messages">[{% for m in messages %}{"level": "{{ m.tags|escapejs }}", "text": "{{ m.message|escapejs }}"}{% if not forloop.last %},{% endif %}{% endfor %}]</script>
+<noscript>
+  <div class="mb-6 space-y-2">{% for m in messages %}<p class="rounded-xl border border-line px-4 py-2.5 text-sm">{{ m }}</p>{% endfor %}</div>
+</noscript>
+{% endif %}

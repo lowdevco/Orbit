@@ -1,0 +1,55 @@
+{% load static %}<!DOCTYPE html>
+<html lang="en" data-theme="{{ ui_theme|default:'dark' }}" data-accent="{{ ui_accent|default:'blue' }}">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{% block head_title %}Sign in{% endblock %} · Orbit</title>
+  <meta name="theme-color" content="{% if ui_theme == 'light' %}#ffffff{% else %}#010409{% endif %}">
+  <link rel="manifest" href="{% url 'manifest' %}">
+  <link rel="icon" href="{% static 'icons/icon-192.png' %}">
+  <link rel="stylesheet" href="{% static 'css/orbit.css' %}">
+  {% block extra_head %}{% endblock %}
+</head>
+<body class="min-h-screen">
+  <div class="grid min-h-screen lg:grid-cols-2">
+    <!-- Brand side -->
+    <div class="relative hidden overflow-hidden border-r border-line-soft bg-surface lg:flex lg:flex-col lg:justify-between lg:p-12">
+      <svg class="pointer-events-none absolute -right-40 top-1/2 h-[640px] w-[640px] -translate-y-1/2 text-accent/25" viewBox="0 0 200 200" fill="none" stroke="currentColor" stroke-width=".6" aria-hidden="true">
+        <ellipse cx="100" cy="100" rx="95" ry="40" transform="rotate(-25 100 100)"/>
+        <ellipse cx="100" cy="100" rx="70" ry="29" transform="rotate(-25 100 100)"/>
+        <ellipse cx="100" cy="100" rx="45" ry="19" transform="rotate(-25 100 100)"/>
+        <circle cx="100" cy="100" r="12" fill="currentColor" stroke="none"/>
+        <circle cx="186" cy="62" r="4" fill="currentColor" stroke="none"/>
+        <circle cx="44" cy="127" r="3" fill="currentColor" stroke="none"/>
+      </svg>
+      <a href="/" class="relative flex items-center gap-3 text-fg">
+        {% include "partials/icon.html" with name="orbit" cls="h-8 w-8 text-accent-hi" %}
+        <span class="font-display text-2xl font-semibold">Orbit</span>
+      </a>
+      <div class="relative max-w-md">
+        <h2 class="font-display text-4xl font-semibold leading-tight">Projects, notes and your code, in one orbit.</h2>
+        <ul class="mt-8 space-y-3 text-sm text-muted">
+          <li class="flex items-center gap-3"><span class="h-1.5 w-1.5 rounded-full bg-accent"></span>Milestones, boards and timelines for every project</li>
+          <li class="flex items-center gap-3"><span class="h-1.5 w-1.5 rounded-full bg-accent"></span>Your GitHub inbox, activity and analytics</li>
+          <li class="flex items-center gap-3"><span class="h-1.5 w-1.5 rounded-full bg-accent"></span>Private by default. Your data stays yours.</li>
+        </ul>
+      </div>
+      <p class="relative text-xs text-muted">© {% now "Y" %} lowdevco</p>
+    </div>
+    <!-- Form side -->
+    <div class="flex flex-col items-center justify-center p-6">
+      <a href="/" class="mb-8 flex items-center gap-2 text-fg lg:hidden">
+        {% include "partials/icon.html" with name="orbit" cls="h-8 w-8 text-accent-hi" %}<span class="font-display text-2xl font-semibold">Orbit</span>
+      </a>
+      <div class="w-full max-w-sm">
+        {% include "partials/messages.html" %}
+        <div class="auth-plain">{% block content %}{% endblock %}</div>
+        <p class="mt-8 text-center text-xs text-muted"><a href="{% url 'terms' %}" class="text-muted hover:text-fg">Terms</a> · <a href="{% url 'privacy' %}" class="text-muted hover:text-fg">Privacy</a></p>
+      </div>
+    </div>
+  </div>
+  {% block extra_body %}{% endblock %}
+  <script nonce="{{ csp_nonce }}">window.ORBIT = {csrf: "{{ csrf_token }}"};</script>
+  <script src="{% static 'js/orbit.js' %}" defer></script>
+</body>
+</html>

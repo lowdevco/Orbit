@@ -1,0 +1,40 @@
+{% extends "base.html" %}
+{% block title %}{% if project %}Edit {{ project.name }}{% else %}New project{% endif %}{% endblock %}
+{% block content %}
+<div class="mx-auto max-w-3xl space-y-6">
+  <div class="page-head !mb-0">
+    <div>
+      <p class="eyebrow">{% if project %}<a href="{{ project.get_absolute_url }}">{{ project.name }}</a>{% else %}<a href="{% url 'projects:list' %}">Projects</a>{% endif %}</p>
+      <h1 class="page-title">{% if project %}Edit project{% else %}Create a new project{% endif %}</h1>
+    </div>
+  </div>
+  <form method="post" class="card space-y-5 p-6">
+    {% csrf_token %}
+    {% for e in form.non_field_errors %}<p class="error">{{ e }}</p>{% endfor %}
+    <div class="grid gap-4 grid-cols-[1fr_auto]">
+      {% include "partials/field.html" with field=form.name %}
+      {% include "partials/field.html" with field=form.color %}
+    </div>
+    {% include "partials/field.html" with field=form.description %}
+    <div class="grid gap-4 sm:grid-cols-3">
+      {% include "partials/field.html" with field=form.status %}
+      {% include "partials/field.html" with field=form.start_date %}
+      {% include "partials/field.html" with field=form.target_date %}
+    </div>
+    <div class="grid gap-4 sm:grid-cols-2">
+      {% include "partials/field.html" with field=form.live_url %}
+      {% include "partials/field.html" with field=form.github_repo %}
+    </div>
+    {% include "partials/field.html" with field=form.readme %}
+    {% if project %}{% include "partials/field.html" with field=form.archived %}{% endif %}
+    <div class="flex gap-2 border-t border-line-soft pt-5">
+      <button class="btn btn-primary">{% if project %}Save changes{% else %}Create project{% endif %}</button>
+      <a href="{% if project %}{{ project.get_absolute_url }}{% else %}{% url 'projects:list' %}{% endif %}" class="btn">Cancel</a>
+    </div>
+  </form>
+  {% if project %}
+    {% url 'projects:delete' project.slug as delete_url %}
+    {% include "partials/delete_verify.html" with title="Delete project" what="Removes its milestones, tasks, updates, links and time entries. Notes stay but are unlinked." expected=project.name delete_url=delete_url %}
+  {% endif %}
+</div>
+{% endblock %}

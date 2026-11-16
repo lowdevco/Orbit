@@ -1,0 +1,7 @@
+Django>=6.1,<6.2
+django-allauth[socialaccount]>=65.22
+Markdown>=3.11
+nh3>=0.3
+python-decouple>=3.8
+# MySQL (production): uncomment and set DB_ENGINE=mysql in .env
+# mysqlclient>=2.2

@@ -1,0 +1,52 @@
+{% extends "base.html" %}
+{% block title %}Projects{% endblock %}
+{% block content %}
+<div class="page-head">
+  <div>
+    <p class="eyebrow">Workspace</p>
+    <h1 class="page-title">{% if archived %}Archived projects{% else %}Projects{% endif %}</h1>
+  </div>
+  <div class="flex gap-2">
+    <a href="{% url 'projects:import' %}" class="btn">{% include "partials/icon.html" with name="import" %}Import from GitHub</a>
+    <a href="{% url 'projects:create' %}" class="btn btn-primary">{% include "partials/icon.html" with name="plus" %}New project</a>
+  </div>
+</div>
+<nav class="pills mb-6" aria-label="Filter projects">
+  <a class="tab {% if not status and not archived %}active{% endif %}" href="{% url 'projects:list' %}">All</a>
+  {% for key, label in statuses %}
+    <a class="tab {% if status == key %}active{% endif %}" href="?status={{ key }}{% if archived %}&archived=1{% endif %}">{{ label }}</a>
+  {% endfor %}
+  <a class="tab {% if archived %}active{% endif %}" href="?archived=1">Archived</a>
+</nav>
+{% if projects %}
+<div class="grid gap-4 sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4">
+  {% for p in projects %}
+    <a href="{{ p.get_absolute_url }}" class="card card-hover relative flex flex-col gap-4 overflow-hidden p-5 text-fg hover:text-fg">
+      <span class="absolute inset-x-0 top-0 h-0.5" style="background: {{ p.swatch }}"></span>
+      <div class="flex items-center gap-2">
+        <span class="flex-1 truncate font-display text-[17px] font-semibold">{{ p.name }}</span>
+        {% include "partials/status_badge.html" with status=p.status label=p.get_status_display %}
+      </div>
+      <p class="line-clamp-2 min-h-10 text-sm text-muted">{{ p.description|default:"No description." }}</p>
+      <div>
+        <div class="mb-1.5 flex justify-between text-xs text-muted"><span>{{ p.task_done }}/{{ p.task_total }} tasks</span><span class="num">{% widthratio p.task_done p.task_total|default:1 100 %}%</span></div>
+        <div class="progress"><span style="width: {% widthratio p.task_done p.task_total|default:1 100 %}%"></span></div>
+      </div>
+      <div class="mt-auto flex flex-wrap items-center gap-x-3 gap-y-1 border-t border-line-soft pt-3 text-xs text-muted">
+        {% with m=p.next_milestone %}{% if m %}<span class="flex min-w-0 items-center gap-1 truncate">{% include "partials/icon.html" with name="milestone" cls="h-3.5 w-3.5 text-accent-hi" %}{{ m.title }}</span>{% endif %}{% endwith %}
+        {% if p.live_url %}<span class="flex items-center gap-1"><span class="h-1.5 w-1.5 rounded-full bg-ok"></span>Live</span>{% endif %}
+        {% if p.github_repo %}<span class="flex min-w-0 items-center gap-1 truncate">{% include "partials/icon.html" with name="github" cls="h-3.5 w-3.5" %}{{ p.github_repo }}</span>{% endif %}
+        {% if p.target_date %}<span class="ml-auto {% if p.is_overdue %}text-danger{% endif %}">Due {{ p.target_date|date:"M j" }}</span>{% endif %}
+      </div>
+    </a>
+  {% endfor %}
+</div>
+{% else %}
+<div class="card flex flex-col items-center gap-3 p-12 text-center">
+  {% include "partials/icon.html" with name="orbit" cls="h-12 w-12 text-accent-hi" %}
+  <p class="font-display text-lg font-semibold">No projects here</p>
+  <p class="text-sm text-muted">Create one from scratch, or import a GitHub repository with its README and commits.</p>
+  <a href="{% url 'projects:create' %}" class="btn btn-primary">New project</a>
+</div>
+{% endif %}
+{% endblock %}

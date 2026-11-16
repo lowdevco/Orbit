@@ -1,0 +1,218 @@
+{% extends "base.html" %}
+{% load orbit %}
+{% block title %}Dashboard{% endblock %}
+{% block content %}
+<!-- Hero -->
+<section class="card relative mb-6 overflow-hidden px-6 py-7 lg:px-8">
+  <svg class="pointer-events-none absolute -right-16 -top-24 h-80 w-80 text-accent/20 max-sm:hidden" viewBox="0 0 200 200" fill="none" stroke="currentColor" aria-hidden="true">
+    <ellipse cx="100" cy="100" rx="90" ry="38" transform="rotate(-25 100 100)"/>
+    <ellipse cx="100" cy="100" rx="62" ry="26" transform="rotate(-25 100 100)"/>
+    <circle cx="100" cy="100" r="14" fill="currentColor" stroke="none"/>
+    <circle cx="178" cy="66" r="5" fill="currentColor" stroke="none"/>
+  </svg>
+  <div class="relative flex flex-wrap items-end justify-between gap-6">
+    <div>
+      <p class="eyebrow">{% now "l, j F Y" %}</p>
+      <h1 class="mt-2 font-display text-3xl font-semibold lg:text-4xl">Welcome back{% if user_greeting %}, {{ user_greeting }}{% endif %}</h1>
+      <p class="mt-2 text-sm text-muted">
+        {% if stats.open_tasks %}{{ stats.open_tasks }} open task{{ stats.open_tasks|pluralize }} across {{ stats.active_projects }} active project{{ stats.active_projects|pluralize }}{% else %}You're all clear. Start something new.{% endif %}{% if inbox and inbox.review_requests %} · <a href="{% url 'insights:inbox' %}">{{ inbox.review_requests|length }} review{{ inbox.review_requests|length|pluralize }} waiting</a>{% endif %}
+      </p>
+    </div>
+    <div class="flex flex-wrap gap-2">
+      <a href="{% url 'projects:create' %}" class="btn btn-primary">{% include "partials/icon.html" with name="plus" %}New project</a>
+      <a href="{% url 'notes:create' %}" class="btn">{% include "partials/icon.html" with name="note" %}New note</a>
+    </div>
+  </div>
+</section>
+
+<!-- Stats -->
+<div class="mb-6 grid grid-cols-2 gap-4 xl:grid-cols-4">
+  <a href="{% url 'projects:list' %}?status=active" class="stat card-hover text-fg hover:text-fg">
+    <p class="stat-label flex items-center gap-2">{% include "partials/icon.html" with name="folder" cls="h-3.5 w-3.5" %}Active projects</p>
+    <p class="stat-value">{{ stats.active_projects }}</p>
+  </a>
+  <a href="{% url 'calendar' %}" class="stat card-hover text-fg hover:text-fg">
+    <p class="stat-label flex items-center gap-2">{% include "partials/icon.html" with name="check" cls="h-3.5 w-3.5" %}Open tasks</p>
+    <p class="stat-value">{{ stats.open_tasks }}</p>
+  </a>
+  <a href="{% url 'projects:list' %}" class="stat card-hover text-fg hover:text-fg">
+    <p class="stat-label flex items-center gap-2">{% include "partials/icon.html" with name="milestone" cls="h-3.5 w-3.5" %}Open milestones</p>
+    <p class="stat-value">{{ stats.milestones }}</p>
+  </a>
+  <a href="{% url 'insights:analytics' %}" class="stat card-hover text-fg hover:text-fg">
+    <p class="stat-label flex items-center gap-2">{% include "partials/icon.html" with name="github" cls="h-3.5 w-3.5" %}Contributions · 7 days</p>
+    {% if github %}
+      <div class="flex items-end justify-between gap-3">
+        <p class="stat-value text-accent-hi">{{ github.this_week }}</p>
+        <svg class="h-8 w-14 shrink-0 text-accent sm:w-28" viewBox="0 0 100 28" preserveAspectRatio="none" aria-label="Last 30 days">
+          <polyline points="{{ github.sparkline }}" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round" vector-effect="non-scaling-stroke"/>
+        </svg>
+      </div>
+    {% else %}<p class="mt-3 text-sm text-accent-hi">Connect GitHub →</p>{% endif %}
+  </a>
+</div>
+
+<div class="grid gap-6 xl:grid-cols-12">
+  <!-- Main column -->
+  <div class="space-y-6 xl:col-span-8">
+    <section>
+      <div class="mb-3 flex items-center justify-between"><h2 class="font-display text-lg font-semibold">Projects in motion</h2><a href="{% url 'projects:list' %}" class="text-sm">All projects</a></div>
+      {% if recent_projects %}
+      <div class="grid gap-4 md:grid-cols-2">
+        {% for p in recent_projects %}
+          <a href="{{ p.get_absolute_url }}" class="card card-hover block p-5 text-fg hover:text-fg">
+            <div class="flex items-center gap-3">
+              <span class="h-2.5 w-2.5 shrink-0 rounded-full" style="background: {{ p.swatch }}; box-shadow: 0 0 12px {{ p.swatch }}"></span>
+              <span class="flex-1 truncate font-display font-semibold">{{ p.name }}</span>
+              {% include "partials/status_badge.html" with status=p.status label=p.get_status_display %}
+            </div>
+            <div class="mt-4 flex items-center gap-3">
+              <div class="progress flex-1"><span style="width: {{ p.progress }}%"></span></div>
+              <span class="num text-sm text-muted">{{ p.progress }}%</span>
+            </div>
+            <p class="mt-3 flex items-center gap-1.5 truncate text-xs text-muted">
+              {% with m=p.next_milestone %}
+                {% if m %}{% include "partials/icon.html" with name="milestone" cls="h-3.5 w-3.5 text-accent-hi" %}Next: <span class="text-fg">{{ m.title }}</span>{% if m.due_date %} · {{ m.due_date|date:"M j" }}{% endif %}
+                {% elif p.target_date %}Target {{ p.target_date|date:"M j, Y" }}
+                {% else %}No milestones yet{% endif %}
+              {% endwith %}
+            </p>
+          </a>
+        {% endfor %}
+      </div>
+      {% else %}
+        <div class="card flex flex-col items-center gap-3 p-10 text-center">
+          {% include "partials/icon.html" with name="orbit" cls="h-10 w-10 text-accent-hi" %}
+          <p class="font-display font-semibold">Nothing in orbit yet</p>
+          <p class="text-sm text-muted">Create a project or import one of your GitHub repos.</p>
+          <div class="flex gap-2"><a href="{% url 'projects:create' %}" class="btn btn-primary">New project</a><a href="{% url 'projects:import' %}" class="btn">Import repo</a></div>
+        </div>
+      {% endif %}
+    </section>
+
+    <div class="grid gap-6 lg:grid-cols-2">
+      <section class="card">
+        <div class="card-header">Milestones ahead</div>
+        {% if milestones %}
+        <ul class="space-y-4 p-5 pt-3">
+          {% for m in milestones %}
+            <li>
+              <div class="flex items-center justify-between gap-3 text-sm">
+                <a href="{{ m.project.get_absolute_url }}?tab=milestones" class="truncate font-medium text-fg">{{ m.title }}</a>
+                <span class="num shrink-0 text-xs {% if m.is_overdue %}text-danger{% else %}text-muted{% endif %}">{% if m.due_date %}{{ m.due_date|date:"M j" }}{% else %}{{ m.progress }}%{% endif %}</span>
+              </div>
+              <p class="mb-2 text-xs text-muted">{{ m.project.name }}</p>
+              <div class="progress"><span style="width: {{ m.progress }}%"></span></div>
+            </li>
+          {% endfor %}
+        </ul>
+        {% else %}
+          <p class="p-5 pt-2 text-sm text-muted">Break projects into milestones to see them here.</p>
+        {% endif %}
+      </section>
+
+      <section class="card">
+        <div class="card-header">This week</div>
+        <div class="grid grid-cols-2 gap-3 p-5 pt-3">
+          <div class="rounded-xl bg-raised/60 p-3"><p class="num text-2xl font-semibold">{{ week.tasks_done }}</p><p class="text-xs text-muted">tasks done</p></div>
+          <div class="rounded-xl bg-raised/60 p-3"><p class="num text-2xl font-semibold">{{ week.updates }}</p><p class="text-xs text-muted">updates</p></div>
+          <div class="rounded-xl bg-raised/60 p-3"><p class="num text-2xl font-semibold">{{ week.time|duration }}</p><p class="text-xs text-muted">time tracked</p></div>
+          <div class="rounded-xl bg-raised/60 p-3"><p class="num text-2xl font-semibold">{% if github %}{{ github.current_streak }}d{% else %}–{% endif %}</p><p class="text-xs text-muted">commit streak</p></div>
+        </div>
+      </section>
+    </div>
+
+    <section class="card">
+      <div class="card-header">Recent activity in Orbit</div>
+      {% if activity %}
+      <ol class="relative mx-5 mb-5 mt-3 space-y-4 border-l border-line-soft pl-5">
+        {% for a in activity %}
+          <li class="relative text-sm">
+            <span class="absolute -left-[25px] top-1 h-2.5 w-2.5 rounded-full ring-4 ring-surface {% if a.kind == 'task' %}bg-ok{% elif a.obj.source == 'github' %}bg-muted{% else %}bg-accent{% endif %}"></span>
+            {% if a.kind == "update" %}
+              <p class="truncate">{{ a.obj.title }}</p>
+              <p class="text-xs text-muted"><a href="{{ a.obj.project.get_absolute_url }}">{{ a.obj.project.name }}</a> · {% if a.obj.source == "github" %}commit · {% endif %}{{ a.when|timesince }} ago</p>
+            {% else %}
+              <p class="truncate">Completed <span class="font-medium">{{ a.obj.title }}</span></p>
+              <p class="text-xs text-muted"><a href="{{ a.obj.project.get_absolute_url }}?tab=board">{{ a.obj.project.name }}</a> · {{ a.when|timesince }} ago</p>
+            {% endif %}
+          </li>
+        {% endfor %}
+      </ol>
+      {% else %}
+        <p class="p-5 pt-2 text-sm text-muted">Updates, commits and finished tasks will appear here.</p>
+      {% endif %}
+    </section>
+  </div>
+
+  <!-- Side column -->
+  <aside class="space-y-6 xl:col-span-4">
+    <section class="card">
+      <div class="card-header">Inbox <a href="{% url 'insights:inbox' %}">Open inbox</a></div>
+      {% if inbox %}
+        <div class="grid grid-cols-3 gap-2 px-5 pt-3">
+          <a href="{% url 'insights:inbox' %}?tab=review" class="rounded-xl bg-raised/60 p-3 text-center text-fg hover:bg-raised"><p class="num text-xl font-semibold text-accent-hi">{{ inbox.review_requests|length }}</p><p class="text-[11px] text-muted">reviews</p></a>
+          <a href="{% url 'insights:inbox' %}?tab=assigned" class="rounded-xl bg-raised/60 p-3 text-center text-fg hover:bg-raised"><p class="num text-xl font-semibold">{{ inbox.assigned|length }}</p><p class="text-[11px] text-muted">assigned</p></a>
+          <a href="{% url 'insights:inbox' %}?tab=mine" class="rounded-xl bg-raised/60 p-3 text-center text-fg hover:bg-raised"><p class="num text-xl font-semibold">{{ inbox.my_prs|length }}</p><p class="text-[11px] text-muted">your PRs</p></a>
+        </div>
+        <ul class="space-y-1 p-3">
+          {% for it in inbox.review_requests|slice:":4" %}
+            <li><a href="{{ it.html_url }}" target="_blank" rel="noopener" class="flex items-start gap-2 rounded-lg px-2 py-2 text-sm text-fg hover:bg-raised">
+              {% include "partials/icon.html" with name="pr" cls="mt-0.5 h-4 w-4 text-purple" %}
+              <span class="min-w-0 flex-1"><span class="block truncate">{{ it.title }}</span><span class="block truncate text-xs text-muted">{{ it.repository_url|cut:"https://api.github.com/repos/" }} #{{ it.number }}</span></span>
+            </a></li>
+          {% empty %}
+            <li class="px-2 py-2 text-sm text-muted">No reviews waiting on you.</li>
+          {% endfor %}
+        </ul>
+      {% else %}
+        <p class="p-5 pt-2 text-sm text-muted"><a href="{% url 'settings' %}?tab=connections">Connect GitHub</a> to see review requests and assigned issues.</p>
+      {% endif %}
+    </section>
+
+    <section class="card">
+      <div class="card-header">GitHub activity <a href="{% url 'insights:activity' %}">View all</a></div>
+      {% if gh_activity %}
+        <ul class="space-y-1 p-3">
+          {% for it in gh_activity %}{% include "insights/_activity_item.html" with compact=True %}{% endfor %}
+        </ul>
+      {% else %}
+        <p class="p-5 pt-2 text-sm text-muted">{% if github %}No recent pushes, stars or releases.{% else %}Connect GitHub to see your pushes, stars and releases.{% endif %}</p>
+      {% endif %}
+    </section>
+
+    <section class="card">
+      <div class="card-header">Upcoming deadlines <a href="{% url 'calendar' %}">Calendar</a></div>
+      {% if upcoming %}
+      <ul class="space-y-1 p-3">
+        {% for t in upcoming %}
+          <li><a href="{% url 'projects:task_edit' t.project.slug t.pk %}" class="flex items-center gap-3 rounded-lg px-2 py-2 text-sm text-fg hover:bg-raised">
+            <span class="num w-12 shrink-0 text-xs {% if t.is_overdue %}text-danger{% else %}text-muted{% endif %}">{{ t.due_date|date:"M j" }}</span>
+            <span class="min-w-0 flex-1 truncate">{{ t.title }}</span>
+            <span class="truncate text-xs text-muted">{{ t.project.name }}</span>
+          </a></li>
+        {% endfor %}
+      </ul>
+      {% else %}
+        <p class="p-5 pt-2 text-sm text-muted">Nothing due in the next two weeks.</p>
+      {% endif %}
+    </section>
+
+    <section class="card">
+      <div class="card-header">Pinned notes <a href="{% url 'notes:list' %}">All notes</a></div>
+      {% if pinned_notes %}
+      <ul class="space-y-1 p-3">
+        {% for n in pinned_notes %}
+          <li><a href="{{ n.get_absolute_url }}" class="block rounded-lg px-2 py-2 hover:bg-raised">
+            <span class="block truncate text-sm text-fg">{{ n.title }}</span>
+            <span class="block truncate text-xs text-muted">{{ n.body|truncatechars:80 }}</span>
+          </a></li>
+        {% endfor %}
+      </ul>
+      {% else %}
+        <p class="p-5 pt-2 text-sm text-muted">Pin notes to keep them here.</p>
+      {% endif %}
+    </section>
+  </aside>
+</div>
+{% endblock %}

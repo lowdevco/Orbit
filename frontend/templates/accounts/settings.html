@@ -1,0 +1,182 @@
+{% extends "base.html" %}
+{% load socialaccount %}
+{% block title %}Settings{% endblock %}
+{% block content %}
+<div class="page-head">
+  <div><p class="eyebrow">Account</p><h1 class="page-title">Settings</h1></div>
+</div>
+<div class="grid gap-6 lg:grid-cols-[220px_1fr] xl:grid-cols-[240px_1fr_300px]">
+  <nav class="flex gap-1 overflow-x-auto lg:flex-col" aria-label="Settings sections">
+    {% for key, label in tabs %}
+      <a href="?tab={{ key }}" class="flex items-center gap-3 whitespace-nowrap rounded-xl px-3 py-2.5 text-sm font-medium {% if tab == key %}bg-accent/15 text-accent-hi{% else %}text-muted hover:bg-raised hover:text-fg{% endif %}">
+        {% if key == "profile" %}{% include "partials/icon.html" with name="user" %}{% elif key == "appearance" %}{% include "partials/icon.html" with name="palette" %}{% elif key == "connections" %}{% include "partials/icon.html" with name="link" %}{% elif key == "keys" %}{% include "partials/icon.html" with name="key" %}{% elif key == "data" %}{% include "partials/icon.html" with name="database" %}{% else %}{% include "partials/icon.html" with name="shield" %}{% endif %}
+        {{ label }}
+      </a>
+    {% endfor %}
+  </nav>
+
+  <div class="min-w-0 space-y-6">
+    {% if tab == "profile" %}
+      <section class="card p-6">
+        <h2 class="font-display text-lg font-semibold">Profile</h2>
+        <p class="mt-1 text-sm text-muted">How your name appears in Orbit.</p>
+        <form method="post" action="{% url 'settings' %}" class="mt-5 space-y-4">
+          {% csrf_token %}
+          {% include "partials/field.html" with field=profile_form.display_name %}
+          <div class="grid gap-4 sm:grid-cols-2">
+            {% include "partials/field.html" with field=profile_form.first_name %}
+            {% include "partials/field.html" with field=profile_form.last_name %}
+          </div>
+          <div><p class="label">Email</p><p class="text-sm text-muted">{{ user.email }} <span class="text-xs">(from your sign-in provider)</span></p></div>
+          <button class="btn btn-primary">Save profile</button>
+        </form>
+      </section>
+
+    {% elif tab == "appearance" %}
+      <form method="post" action="{% url 'appearance' %}" class="card space-y-8 p-6">
+        {% csrf_token %}
+        <div>
+          <h2 class="font-display text-lg font-semibold">Appearance</h2>
+          <p class="mt-1 text-sm text-muted">Pick a theme and an accent colour. Changes preview instantly; save to keep them.</p>
+        </div>
+        <fieldset>
+          <legend class="label">Theme</legend>
+          <div class="grid gap-3 sm:grid-cols-3">
+            {% for value, label in themes %}
+              <label class="cursor-pointer rounded-2xl border border-line-soft p-3 has-[:checked]:border-accent has-[:checked]:ring-4 has-[:checked]:ring-accent/15">
+                <input type="radio" name="theme" value="{{ value }}" class="sr-only" data-preview-theme="theme" {% if profile.theme == value %}checked{% endif %}>
+                <span class="block h-16 overflow-hidden rounded-xl border border-line-soft {% if value == 'light' %}bg-[#f6f8fa]{% elif value == 'dark' %}bg-[#0d1117]{% else %}bg-gradient-to-r from-[#0d1117] from-50% to-[#f6f8fa] to-50%{% endif %}">
+                  <span class="m-2 block h-2 w-10 rounded-full bg-accent"></span>
+                  <span class="mx-2 block h-1.5 w-16 rounded-full {% if value == 'light' %}bg-[#d0d7de]{% else %}bg-[#30363d]{% endif %}"></span>
+                </span>
+                <span class="mt-2 block text-sm font-medium">{{ label }}</span>
+                {% if value == "system" %}<span class="block text-xs text-muted">Follows your device</span>{% endif %}
+              </label>
+            {% endfor %}
+          </div>
+        </fieldset>
+        <fieldset>
+          <legend class="label">Accent colour</legend>
+          <div class="flex flex-wrap gap-3">
+            {% for key, label, swatch in accents %}
+              <label class="flex cursor-pointer items-center gap-2 rounded-xl border border-line-soft py-2 pl-2 pr-3 text-sm has-[:checked]:border-accent has-[:checked]:bg-accent/10">
+                <input type="radio" name="accent" value="{{ key }}" class="sr-only" data-preview-theme="accent" {% if profile.accent == key %}checked{% endif %}>
+                <span class="h-6 w-6 rounded-full ring-2 ring-inset ring-black/10" style="background: {{ swatch }}"></span>{{ label }}
+              </label>
+            {% endfor %}
+          </div>
+        </fieldset>
+        <button class="btn btn-primary">Save appearance</button>
+      </form>
+
+    {% elif tab == "connections" %}
+      <section class="card p-6">
+        <h2 class="font-display text-lg font-semibold">Connected accounts</h2>
+        <p class="mt-1 text-sm text-muted">Sign in with any of these. Connecting GitHub unlocks your profile, analytics, inbox and repo sync.</p>
+        {% get_providers as providers %}
+        <ul class="mt-5 space-y-3">
+          {% for p in providers %}
+            <li class="flex flex-wrap items-center gap-4 rounded-xl border border-line-soft bg-raised/40 p-4">
+              <span class="grid h-10 w-10 place-items-center rounded-xl bg-raised">
+                {% if p.id == "github" %}{% include "partials/icon.html" with name="github" cls="h-5 w-5" %}{% else %}<span class="font-display text-lg font-semibold text-accent-hi">G</span>{% endif %}
+              </span>
+              <div class="min-w-0 flex-1">
+                <p class="font-medium">{{ p.name }}</p>
+                {% if p.id in connected %}
+                  {% for a in accounts %}{% if a.provider == p.id %}
+                    <p class="flex items-center gap-2 truncate text-sm text-muted">{% if a.avatar %}<img src="{{ a.avatar }}" alt="" class="h-4 w-4 rounded-full">{% endif %}{{ a.label }}</p>
+                  {% endif %}{% endfor %}
+                {% else %}
+                  <p class="text-sm text-muted">Not connected</p>
+                {% endif %}
+              </div>
+              {% if p.id in connected %}
+                <span class="badge badge-done">Connected</span>
+              {% else %}
+                <form method="post" action="{% provider_login_url p.id process='connect' next='/settings/?tab=connections' %}">{% csrf_token %}
+                  <button class="btn btn-primary btn-sm">Connect {{ p.name }}</button></form>
+              {% endif %}
+            </li>
+          {% empty %}
+            <li class="text-sm text-muted">No sign-in providers are configured on this server.</li>
+          {% endfor %}
+        </ul>
+        <p class="mt-4 text-xs text-muted">To disconnect a provider, use <a href="{% url 'socialaccount_connections' %}">manage connections</a>. You need at least one connected account to sign in.</p>
+      </section>
+
+    {% elif tab == "keys" %}
+      <section class="card p-6">
+        <div class="flex flex-wrap items-start justify-between gap-3">
+          <div>
+            <h2 class="font-display text-lg font-semibold">GitHub key</h2>
+            <p class="mt-1 text-sm text-muted">Optional. A personal access token Orbit uses instead of your GitHub sign-in.</p>
+          </div>
+          {% if source == "key" %}<span class="badge badge-done">Using your key</span>
+          {% elif source == "oauth" %}<span class="badge badge-active">Using GitHub sign-in</span>
+          {% else %}<span class="badge badge-paused">GitHub not connected</span>{% endif %}
+        </div>
+        <div class="mt-5 grid gap-3 text-sm sm:grid-cols-2">
+          <div class="rounded-xl bg-raised/50 p-4"><p class="font-medium">You don't need a key if…</p><p class="mt-1 text-muted">you signed in with or connected GitHub. Profile, analytics, inbox, public repos, sync and issues all work.</p></div>
+          <div class="rounded-xl bg-raised/50 p-4"><p class="font-medium">Add a key if…</p><p class="mt-1 text-muted">you only use Google sign-in, or you want <span class="text-fg">private repositories</span> included.</p></div>
+        </div>
+        {% if has_key %}
+          <div class="mt-5 flex flex-wrap items-center justify-between gap-3 rounded-xl border border-ok/30 bg-ok/10 px-4 py-3 text-sm">
+            <span class="flex items-center gap-2">{% include "partials/icon.html" with name="shield" %}A key is saved (encrypted). Paste a new one to replace it.</span>
+            <form method="post" action="{% url 'key_delete' %}" data-confirm="Remove your saved GitHub key?">{% csrf_token %}<button class="btn btn-danger btn-sm">Remove key</button></form>
+          </div>
+        {% endif %}
+        <form method="post" action="{% url 'keys' %}" class="mt-5 space-y-3">
+          {% csrf_token %}
+          {% include "partials/field.html" with field=key_form.key %}
+          <button class="btn btn-primary">Verify & save key</button>
+        </form>
+        <details class="mt-5 text-sm">
+          <summary class="cursor-pointer text-accent-hi">How to create a key</summary>
+          <ol class="mt-3 list-decimal space-y-1 pl-5 text-muted">
+            <li>Open <a href="https://github.com/settings/tokens" target="_blank" rel="noopener">github.com/settings/tokens</a> → <em>Generate new token (classic)</em>.</li>
+            <li>Scopes: <code>read:user</code>, <code>user:email</code>, plus <code>repo</code> (private repos and issues) or <code>public_repo</code> (public only).</li>
+            <li>Paste it above. Orbit checks it with GitHub, then stores it encrypted. It is never shown again.</li>
+          </ol>
+        </details>
+      </section>
+
+    {% elif tab == "data" %}
+      <section class="card p-6">
+        <h2 class="font-display text-lg font-semibold">Your data</h2>
+        <p class="mt-1 text-sm text-muted">Everything you create in Orbit belongs to you.</p>
+        <div class="mt-5 grid grid-cols-3 gap-3">
+          <div class="rounded-xl bg-raised/50 p-4"><p class="num text-2xl font-semibold">{{ counts.projects }}</p><p class="text-xs text-muted">projects</p></div>
+          <div class="rounded-xl bg-raised/50 p-4"><p class="num text-2xl font-semibold">{{ counts.tasks }}</p><p class="text-xs text-muted">tasks</p></div>
+          <div class="rounded-xl bg-raised/50 p-4"><p class="num text-2xl font-semibold">{{ counts.notes }}</p><p class="text-xs text-muted">notes</p></div>
+        </div>
+        <div class="mt-5 flex flex-wrap items-center justify-between gap-3 rounded-xl border border-line-soft p-4">
+          <p class="text-sm text-muted">Download projects, milestones, tasks, updates, links, time entries and notes as JSON.</p>
+          <a href="{% url 'export_json' %}" class="btn">{% include "partials/icon.html" with name="download" %}Export JSON</a>
+        </div>
+      </section>
+
+    {% else %}
+      <section class="card p-6">
+        <h2 class="font-display text-lg font-semibold">Account</h2>
+        <p class="mt-1 text-sm text-muted">Signed in as {{ user.email }}.</p>
+        <form method="post" action="{% url 'account_logout' %}" class="mt-5">{% csrf_token %}
+          <button class="btn">{% include "partials/icon.html" with name="logout" %}Sign out</button></form>
+      </section>
+      {% url 'delete_account' as delete_url %}
+      {% include "partials/delete_verify.html" with title="Delete account" what="Permanently removes your projects, notes, keys and cached GitHub data." expected=user.email|default:user.username delete_url=delete_url %}
+    {% endif %}
+  </div>
+
+  <aside class="hidden xl:block space-y-4">
+    <div class="card p-5 text-sm">
+      <p class="flex items-center gap-2 font-display font-semibold">{% include "partials/icon.html" with name="shield" cls="h-4 w-4 text-accent-hi" %}Your privacy</p>
+      <ul class="mt-3 space-y-2 text-muted">
+        <li>Only you can see your projects and notes.</li>
+        <li>GitHub keys are encrypted at rest.</li>
+        <li>No tracking or ad cookies.</li>
+      </ul>
+      <p class="mt-4 flex gap-4 text-xs"><a href="{% url 'privacy' %}">Privacy Policy</a><a href="{% url 'terms' %}">Terms</a></p>
+    </div>
+  </aside>
+</div>
+{% endblock %}

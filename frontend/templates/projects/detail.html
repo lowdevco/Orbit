@@ -1,0 +1,341 @@
+{% extends "base.html" %}
+{% load orbit %}
+{% block title %}{{ project.name }}{% endblock %}
+{% block content %}
+{% with base=project.get_absolute_url %}
+<!-- Header -->
+<section class="card relative mb-6 overflow-hidden p-6 lg:p-7">
+  <span class="absolute inset-y-0 left-0 w-1" style="background: {{ project.swatch }}"></span>
+  <div class="flex flex-wrap items-start justify-between gap-5">
+    <div class="min-w-0 flex-1">
+      <p class="eyebrow"><a href="{% url 'projects:list' %}">Projects</a></p>
+      <h1 class="mt-1 flex flex-wrap items-center gap-3 font-display text-3xl font-semibold">
+        <span class="break-words">{{ project.name }}</span>
+        {% include "partials/status_badge.html" with status=project.status label=project.get_status_display %}
+        {% if project.archived %}<span class="badge badge-muted">Archived</span>{% endif %}
+      </h1>
+      {% if project.description %}<p class="mt-2 max-w-3xl text-muted">{{ project.description }}</p>{% endif %}
+      <div class="mt-3 flex flex-wrap gap-x-5 gap-y-1 text-xs text-muted">
+        {% if project.live_url %}<a href="{{ project.live_url }}" target="_blank" rel="noopener nofollow" class="flex min-w-0 items-center gap-1.5"><span class="h-1.5 w-1.5 rounded-full bg-ok"></span><span class="truncate">{{ project.live_url|cut:"https://"|cut:"http://" }}</span></a>{% endif %}
+        {% if project.github_repo %}<a href="https://github.com/{{ project.github_repo }}" target="_blank" rel="noopener" class="flex items-center gap-1.5">{% include "partials/icon.html" with name="github" cls="h-3.5 w-3.5" %}{{ project.github_repo }}</a>{% endif %}
+        {% if project.start_date %}<span>Started {{ project.start_date|date:"M j, Y" }}</span>{% endif %}
+        {% if project.target_date %}<span class="{% if project.is_overdue %}text-danger{% endif %}">Target {{ project.target_date|date:"M j, Y" }}{% if project.is_overdue %} · overdue{% endif %}</span>{% endif %}
+      </div>
+    </div>
+    <div class="flex flex-wrap gap-2">
+      {% if project.live_url %}<a href="{{ project.live_url }}" target="_blank" rel="noopener nofollow" class="btn">{% include "partials/icon.html" with name="live" %}Live</a>{% endif %}
+      {% if running_timer and running_timer.project_id == project.id %}
+        <form method="post" action="{% url 'projects:timer_stop' %}">{% csrf_token %}<input type="hidden" name="next" value="{{ request.get_full_path }}">
+          <button class="btn border-ok/50 text-ok">{% include "partials/icon.html" with name="clock" %}Stop timer</button></form>
+      {% else %}
+        <form method="post" action="{% url 'projects:timer_start' project.slug %}">{% csrf_token %}<input type="hidden" name="next" value="{{ request.get_full_path }}">
+          <button class="btn">{% include "partials/icon.html" with name="clock" %}Start timer</button></form>
+      {% endif %}
+      <a href="{% url 'notes:create' %}?project={{ project.slug }}" class="btn">{% include "partials/icon.html" with name="note" %}Note</a>
+      <a href="{% url 'projects:export' project.slug %}" class="btn" title="Export as Markdown" aria-label="Export as Markdown">{% include "partials/icon.html" with name="download" %}</a>
+      <a href="{% url 'projects:edit' project.slug %}" class="btn btn-primary">{% include "partials/icon.html" with name="edit" %}Edit</a>
+    </div>
+  </div>
+  <div class="mt-6 flex items-center gap-4">
+    <div class="progress h-2 flex-1"><span data-progress-bar style="width: {{ project.progress }}%"></span></div>
+    <span class="num text-lg font-semibold" data-progress>{{ project.progress }}%</span>
+    <span class="text-xs text-muted">{{ task_done }}/{{ task_total }} tasks</span>
+  </div>
+</section>
+
+<!-- Tabs -->
+<nav class="pills mb-6" aria-label="Project sections">
+  <a class="tab {% if tab == 'overview' %}active{% endif %}" href="{{ base }}">{% include "partials/icon.html" with name="book" %}Overview</a>
+  <a class="tab {% if tab == 'board' %}active{% endif %}" href="{{ base }}?tab=board">{% include "partials/icon.html" with name="board" %}Board <span class="count">{{ task_total }}</span></a>
+  <a class="tab {% if tab == 'milestones' %}active{% endif %}" href="{{ base }}?tab=milestones">{% include "partials/icon.html" with name="milestone" %}Milestones <span class="count">{{ project.milestones.count }}</span></a>
+  <a class="tab {% if tab == 'docs' %}active{% endif %}" href="{{ base }}?tab=docs">{% include "partials/icon.html" with name="note" %}Docs</a>
+  <a class="tab {% if tab == 'time' %}active{% endif %}" href="{{ base }}?tab=time">{% include "partials/icon.html" with name="clock" %}Time</a>
+</nav>
+
+{% if tab == "overview" %}
+<div class="grid gap-6 xl:grid-cols-12">
+  <div class="space-y-6 xl:col-span-8">
+    <form method="post" action="{% url 'projects:update_add' project.slug %}" class="card space-y-3 p-5">
+      {% csrf_token %}
+      <p class="font-display font-semibold">Post an update</p>
+      {{ update_form.title }}
+      {{ update_form.body }}
+      <div class="flex justify-end"><button class="btn btn-primary btn-sm">Add to timeline</button></div>
+    </form>
+
+    <section>
+      <div class="mb-3 flex items-center justify-between">
+        <h2 class="font-display text-lg font-semibold">Timeline</h2>
+        {% if project.github_repo %}
+        <form method="post" action="{% url 'projects:sync' project.slug %}">{% csrf_token %}
+          <button class="btn btn-ghost btn-sm">{% include "partials/icon.html" with name="refresh" cls="h-3.5 w-3.5" %}Sync commits</button></form>
+        {% endif %}
+      </div>
+      {% if updates %}
+      <ol class="relative ml-3 space-y-4 border-l border-line-soft">
+        {% for u in updates %}
+          <li class="relative pl-6">
+            <span class="absolute -left-[5px] top-4 h-2.5 w-2.5 rounded-full ring-4 ring-canvas {% if u.source == 'github' %}bg-muted{% else %}bg-accent{% endif %}"></span>
+            <div class="card">
+              <div class="flex items-start gap-3 px-4 py-3">
+                <div class="min-w-0 flex-1">
+                  <p class="break-words text-sm font-medium">{% if u.url %}<a href="{{ u.url }}" target="_blank" rel="noopener" class="text-fg hover:text-accent-hi">{{ u.title }}</a>{% else %}{{ u.title }}{% endif %}</p>
+                  <p class="mt-0.5 text-xs text-muted">
+                    {% if u.source == "github" %}<span class="inline-flex items-center gap-1">{% include "partials/icon.html" with name="github" cls="h-3 w-3" %}{% if u.github_sha %}<code class="text-accent-hi">{{ u.github_sha|slice:":7" }}</code>{% else %}GitHub{% endif %}</span> · {% endif %}
+                    <time datetime="{{ u.created_at.isoformat }}" title="{{ u.created_at }}">{{ u.created_at|timesince }} ago</time>
+                  </p>
+                </div>
+                <form method="post" action="{% url 'projects:update_delete' project.slug u.pk %}" data-confirm="Delete this update?">{% csrf_token %}
+                  <button class="btn btn-ghost btn-sm btn-icon" aria-label="Delete update">{% include "partials/icon.html" with name="trash" cls="h-3.5 w-3.5" %}</button></form>
+              </div>
+              {% if u.body %}<div class="md border-t border-line-soft px-4 py-3">{{ u.body|markdown }}</div>{% endif %}
+            </div>
+          </li>
+        {% endfor %}
+      </ol>
+      {% else %}
+        <div class="card p-8 text-center text-sm text-muted">No updates yet. Post one above{% if project.github_repo %}, or push commits to {{ project.github_repo }}{% endif %}.</div>
+      {% endif %}
+    </section>
+  </div>
+
+  <aside class="space-y-6 xl:col-span-4">
+    <section class="card">
+      <div class="card-header">Milestones <a href="{{ base }}?tab=milestones">Manage</a></div>
+      <ul class="space-y-4 p-5 pt-3">
+        {% for m in milestones %}
+          <li>
+            <div class="flex items-center justify-between gap-2 text-sm">
+              <span class="truncate {% if m.is_complete %}text-muted line-through{% endif %}">{{ m.title }}</span>
+              <span class="num shrink-0 text-xs {% if m.is_overdue %}text-danger{% else %}text-muted{% endif %}">{{ m.progress }}%</span>
+            </div>
+            <div class="progress mt-2 {% if m.is_complete %}is-done{% endif %}"><span style="width: {{ m.progress }}%"></span></div>
+          </li>
+        {% empty %}
+          <li class="text-sm text-muted">No milestones yet. <a href="{{ base }}?tab=milestones">Add one</a> to track bigger goals.</li>
+        {% endfor %}
+      </ul>
+    </section>
+
+    {% if project.github_repo %}
+    <section class="card">
+      <div class="card-header"><span class="flex min-w-0 items-center gap-2">{% include "partials/icon.html" with name="github" %}<span class="truncate">Open on GitHub</span></span></div>
+      {% if github_error %}
+        <p class="p-5 pt-2 text-sm text-danger">{{ github_error }} <a href="{% url 'settings' %}?tab=keys">Settings › Keys</a></p>
+      {% else %}
+        <ul class="space-y-1 p-3">
+          {% for it in repo_items %}
+            <li><a href="{{ it.html_url }}" target="_blank" rel="noopener" class="flex items-start gap-2 rounded-lg px-2 py-2 text-sm text-fg hover:bg-raised">
+              {% if it.pull_request %}{% include "partials/icon.html" with name="pr" cls="mt-0.5 h-4 w-4 text-purple" %}{% else %}{% include "partials/icon.html" with name="issue" cls="mt-0.5 h-4 w-4 text-ok" %}{% endif %}
+              <span class="min-w-0 flex-1 break-words">{{ it.title }}</span><span class="text-xs text-muted">#{{ it.number }}</span>
+            </a></li>
+          {% empty %}
+            <li class="px-2 py-2 text-sm text-muted">No open issues or pull requests.</li>
+          {% endfor %}
+        </ul>
+        <details class="border-t border-line-soft">
+          <summary class="cursor-pointer px-5 py-3 text-sm text-accent-hi">New GitHub issue</summary>
+          <form method="post" action="{% url 'projects:issue_create' project.slug %}" class="space-y-2 px-5 pb-5">
+            {% csrf_token %}{{ issue_form.title }}{{ issue_form.body }}
+            <button class="btn btn-primary btn-sm">Create issue</button>
+          </form>
+        </details>
+      {% endif %}
+    </section>
+    {% endif %}
+
+    <section class="card">
+      <div class="card-header">Links & resources</div>
+      <ul class="space-y-1 px-3 pt-2">
+        {% for l in project.links.all %}
+          <li class="flex items-center gap-2 rounded-lg px-2 py-1.5 text-sm hover:bg-raised">
+            {% include "partials/icon.html" with name="link" cls="h-3.5 w-3.5 text-muted" %}
+            <a href="{{ l.url }}" target="_blank" rel="noopener nofollow" class="flex-1 truncate">{{ l.title }}</a>
+            <form method="post" action="{% url 'projects:link_delete' project.slug l.pk %}">{% csrf_token %}
+              <button class="btn btn-ghost btn-sm btn-icon" aria-label="Remove link">{% include "partials/icon.html" with name="x" cls="h-3.5 w-3.5" %}</button></form>
+          </li>
+        {% endfor %}
+      </ul>
+      <form method="post" action="{% url 'projects:link_add' project.slug %}" class="space-y-2 p-5 pt-3">
+        {% csrf_token %}
+        <input name="title" class="input" placeholder="Title (e.g. Figma)" required maxlength="120" aria-label="Link title">
+        <div class="flex gap-2"><input name="url" type="url" class="input" placeholder="https://…" required aria-label="Link URL"><button class="btn">Add</button></div>
+      </form>
+    </section>
+
+    <section class="card">
+      <div class="card-header">Public link</div>
+      <div class="space-y-3 p-5 pt-2 text-sm">
+        {% if project.share_token %}
+          <p class="text-muted">Anyone with this link can see progress, milestones, tasks and updates (read-only).</p>
+          <input class="input font-mono text-xs" readonly value="{{ request.scheme }}://{{ request.get_host }}{% url 'shared' project.share_token %}" data-select-on-click aria-label="Public link">
+        {% else %}
+          <p class="text-muted">Share a read-only view of this project's progress.</p>
+        {% endif %}
+        <form method="post" action="{% url 'projects:share' project.slug %}">{% csrf_token %}
+          <button class="btn btn-sm">{% include "partials/icon.html" with name="share" cls="h-3.5 w-3.5" %}{% if project.share_token %}Disable link{% else %}Create public link{% endif %}</button></form>
+      </div>
+    </section>
+
+    <section class="card">
+      <div class="card-header">Notes <a href="{% url 'notes:create' %}?project={{ project.slug }}">Add</a></div>
+      <ul class="space-y-1 p-3 pt-2">
+        {% for n in project.notes.all %}
+          <li><a href="{{ n.get_absolute_url }}" class="block truncate rounded-lg px-2 py-1.5 text-sm text-fg hover:bg-raised">{{ n.title }}</a></li>
+        {% empty %}
+          <li class="px-2 py-1 text-sm text-muted">No notes linked.</li>
+        {% endfor %}
+      </ul>
+    </section>
+  </aside>
+</div>
+
+{% elif tab == "board" %}
+<form method="post" action="{% url 'projects:task_add' project.slug %}" class="card mb-6 grid gap-2 p-3 md:grid-cols-[1fr_auto_auto_auto_auto]">
+  {% csrf_token %}
+  {{ task_form.title }}
+  <select name="priority" class="input md:w-32" aria-label="Priority">{% for v, l in task_form.fields.priority.choices %}<option value="{{ v }}">{% if v == 0 %}Priority{% else %}{{ l }}{% endif %}</option>{% endfor %}</select>
+  {{ task_form.milestone }}
+  <input name="due_date" type="date" class="input md:w-40" aria-label="Due date">
+  <button class="btn btn-primary">{% include "partials/icon.html" with name="plus" %}Add task</button>
+</form>
+<div class="grid gap-4 md:grid-cols-3">
+  {% for key, label, tasks in columns %}
+    <section class="kanban-col card flex min-h-72 flex-col transition-colors" data-status="{{ key }}" aria-label="{{ label }}">
+      <div class="card-header pb-3">
+        <span class="flex items-center gap-2"><span class="h-2 w-2 rounded-full {% if key == 'todo' %}bg-muted{% elif key == 'doing' %}bg-accent{% else %}bg-ok{% endif %}"></span>{{ label }}</span>
+        <span class="num rounded-md bg-raised px-2 py-0.5 text-xs text-muted" data-col-count>{{ tasks|length }}</span>
+      </div>
+      <div class="flex-1 space-y-2 p-3 pt-0" data-cards>
+        {% for t in tasks %}
+          <article class="kanban-card group cursor-grab rounded-xl border border-line-soft bg-raised/70 p-3 transition hover:border-line active:cursor-grabbing" draggable="true" data-move-url="{% url 'projects:task_move' project.slug t.pk %}">
+            <div class="flex items-start gap-2">
+              {% if t.priority %}<span class="mt-0.5 prio-{{ t.priority }}" title="{{ t.get_priority_display }} priority">{% include "partials/icon.html" with name="flag" cls="h-3.5 w-3.5" %}</span>{% endif %}
+              <a href="{% url 'projects:task_edit' project.slug t.pk %}" class="min-w-0 flex-1 break-words text-sm text-fg hover:text-accent-hi {% if t.status == 'done' %}line-through text-muted{% endif %}" data-title>{{ t.title }}</a>
+            </div>
+            {% if t.label_list or t.milestone %}
+            <div class="mt-2 flex flex-wrap gap-1">
+              {% if t.milestone %}<span class="inline-flex items-center gap-1 rounded-md bg-raised px-1.5 py-0.5 text-[11px] text-muted">{% include "partials/icon.html" with name="milestone" cls="h-3 w-3" %}{{ t.milestone.title }}</span>{% endif %}
+              {% for l in t.label_list %}<span class="label-chip">{{ l }}</span>{% endfor %}
+            </div>
+            {% endif %}
+            <div class="mt-2.5 flex items-center gap-2">
+              {% if t.due_date %}<span class="text-xs {% if t.is_overdue %}text-danger{% else %}text-muted{% endif %}">{{ t.due_date|date:"M j" }}</span>{% endif %}
+              {% if t.description %}<span class="text-muted" title="Has description">{% include "partials/icon.html" with name="note" cls="h-3 w-3" %}</span>{% endif %}
+              <select class="ml-auto rounded-lg border border-line-soft bg-canvas px-1.5 py-0.5 text-xs text-muted" data-status-select aria-label="Move task">
+                {% for k, l in t.STATUS_CHOICES %}<option value="{{ k }}" {% if k == t.status %}selected{% endif %}>{{ l }}</option>{% endfor %}
+              </select>
+              <form method="post" action="{% url 'projects:task_delete' project.slug t.pk %}">{% csrf_token %}
+                <input type="hidden" name="next" value="{{ base }}?tab=board">
+                <button class="btn btn-ghost btn-sm btn-icon opacity-60 group-hover:opacity-100" aria-label="Delete task">{% include "partials/icon.html" with name="trash" cls="h-3.5 w-3.5" %}</button></form>
+            </div>
+          </article>
+        {% endfor %}
+      </div>
+    </section>
+  {% endfor %}
+</div>
+<p class="mt-3 text-xs text-muted">Drag cards between columns or use the dropdown. Click a task to edit its description, priority, labels and milestone.</p>
+
+{% elif tab == "milestones" %}
+<div class="grid gap-6 xl:grid-cols-12">
+  <div class="space-y-4 xl:col-span-8">
+    {% for m in milestones %}
+      <article class="card p-5">
+        <div class="flex flex-wrap items-start gap-3">
+          <span class="grid h-10 w-10 shrink-0 place-items-center rounded-xl {% if m.is_complete %}bg-ok/15 text-ok{% elif m.is_overdue %}bg-danger/15 text-danger{% else %}bg-accent/15 text-accent-hi{% endif %}">
+            {% if m.is_complete %}{% include "partials/icon.html" with name="check" cls="h-5 w-5" %}{% else %}{% include "partials/icon.html" with name="milestone" cls="h-5 w-5" %}{% endif %}
+          </span>
+          <div class="min-w-0 flex-1">
+            <h3 class="font-display text-lg font-semibold">{{ m.title }}</h3>
+            <p class="text-xs {% if m.is_overdue %}text-danger{% else %}text-muted{% endif %}">
+              {% if m.is_complete %}Complete{% elif m.due_date %}Due {{ m.due_date|date:"M j, Y" }}{% if m.is_overdue %} · overdue{% endif %}{% else %}No due date{% endif %}
+              · {{ m.counts.0 }}/{{ m.counts.1 }} tasks
+            </p>
+          </div>
+          <div class="flex gap-1">
+            <a href="{% url 'projects:milestone_edit' project.slug m.pk %}" class="btn btn-ghost btn-sm btn-icon" aria-label="Edit milestone">{% include "partials/icon.html" with name="edit" cls="h-3.5 w-3.5" %}</a>
+            <form method="post" action="{% url 'projects:milestone_delete' project.slug m.pk %}" data-confirm="Delete this milestone? Its tasks are kept.">{% csrf_token %}
+              <button class="btn btn-ghost btn-sm btn-icon" aria-label="Delete milestone">{% include "partials/icon.html" with name="trash" cls="h-3.5 w-3.5" %}</button></form>
+          </div>
+        </div>
+        <div class="mt-4 flex items-center gap-3">
+          <div class="progress h-2 flex-1 {% if m.is_complete %}is-done{% endif %}"><span style="width: {{ m.progress }}%"></span></div>
+          <span class="num text-sm font-semibold">{{ m.progress }}%</span>
+        </div>
+        {% if m.description %}<div class="md mt-4 text-muted">{{ m.description|markdown }}</div>{% endif %}
+        {% if m.tasks.all %}
+          <ul class="mt-4 grid gap-1.5 sm:grid-cols-2">
+            {% for t in m.tasks.all %}
+              <li><a href="{% url 'projects:task_edit' project.slug t.pk %}" class="flex items-center gap-2 rounded-lg bg-raised/50 px-3 py-2 text-sm text-fg hover:bg-raised">
+                <span class="h-2 w-2 shrink-0 rounded-full {% if t.status == 'done' %}bg-ok{% elif t.status == 'doing' %}bg-accent{% else %}bg-muted{% endif %}"></span>
+                <span class="truncate {% if t.status == 'done' %}text-muted line-through{% endif %}">{{ t.title }}</span>
+              </a></li>
+            {% endfor %}
+          </ul>
+        {% endif %}
+      </article>
+    {% empty %}
+      <div class="card flex flex-col items-center gap-2 p-10 text-center">
+        {% include "partials/icon.html" with name="milestone" cls="h-10 w-10 text-accent-hi" %}
+        <p class="font-display font-semibold">No milestones yet</p>
+        <p class="max-w-md text-sm text-muted">Milestones group tasks into bigger goals like "MVP" or "v1.0", each with its own progress bar and due date.</p>
+      </div>
+    {% endfor %}
+  </div>
+  <aside class="space-y-6 xl:col-span-4">
+    <form method="post" action="{% url 'projects:milestone_add' project.slug %}" class="card space-y-3 p-5">
+      {% csrf_token %}
+      <p class="font-display font-semibold">New milestone</p>
+      {% include "partials/field.html" with field=milestone_form.title %}
+      {% include "partials/field.html" with field=milestone_form.due_date %}
+      {% include "partials/field.html" with field=milestone_form.description %}
+      <button class="btn btn-primary w-full">{% include "partials/icon.html" with name="plus" %}Add milestone</button>
+    </form>
+    {% if unassigned %}
+      <p class="card p-4 text-sm text-muted">{{ unassigned }} open task{{ unassigned|pluralize }} {{ unassigned|pluralize:"isn't,aren't" }} in a milestone yet. Assign them from the <a href="{{ base }}?tab=board">board</a>.</p>
+    {% endif %}
+  </aside>
+</div>
+
+{% elif tab == "docs" %}
+<section class="card">
+  <div class="card-header">README <a href="{% url 'projects:edit' project.slug %}">Edit</a></div>
+  <div class="p-6 pt-3">
+    {% if project.readme %}<div class="md max-w-4xl">{{ project.readme|markdown }}</div>
+    {% else %}<p class="text-sm text-muted">No docs yet. <a href="{% url 'projects:edit' project.slug %}">Write a README</a> with specs, decisions and setup steps (Markdown supported).</p>{% endif %}
+  </div>
+</section>
+
+{% elif tab == "time" %}
+<div class="grid gap-6 xl:grid-cols-12">
+  <div class="space-y-4 xl:col-span-4">
+    <div class="stat"><p class="stat-label">Total tracked</p><p class="stat-value">{{ total|duration }}</p></div>
+    {% if not running_timer or running_timer.project_id != project.id %}
+    <form method="post" action="{% url 'projects:timer_start' project.slug %}" class="card space-y-3 p-5">
+      {% csrf_token %}<input type="hidden" name="next" value="{{ base }}?tab=time">
+      <input name="note" class="input" placeholder="What are you working on? (optional)" maxlength="200" aria-label="Timer note">
+      <button class="btn btn-primary w-full">{% include "partials/icon.html" with name="clock" %}Start timer</button>
+    </form>
+    {% endif %}
+  </div>
+  <section class="card xl:col-span-8">
+    <div class="card-header">Time entries</div>
+    <ul class="space-y-1 p-3">
+      {% for e in entries %}
+        <li class="flex items-center gap-3 rounded-lg px-2 py-2 text-sm hover:bg-raised">
+          <span class="num w-20">{% if e.ended_at %}{{ e.seconds|duration }}{% else %}<span class="text-ok">running</span>{% endif %}</span>
+          <span class="flex-1 truncate">{{ e.note|default:"–" }}</span>
+          <span class="text-xs text-muted">{{ e.started_at|date:"M j, H:i" }}</span>
+          <form method="post" action="{% url 'projects:time_delete' project.slug e.pk %}">{% csrf_token %}
+            <button class="btn btn-ghost btn-sm btn-icon" aria-label="Delete entry">{% include "partials/icon.html" with name="trash" cls="h-3.5 w-3.5" %}</button></form>
+        </li>
+      {% empty %}
+        <li class="px-2 py-8 text-center text-sm text-muted">No time tracked yet.</li>
+      {% endfor %}
+    </ul>
+  </section>
+</div>
+{% endif %}
+{% endwith %}
+{% endblock %}

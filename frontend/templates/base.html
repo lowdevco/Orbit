@@ -1,0 +1,134 @@
+{% load static %}<!DOCTYPE html>
+<html lang="en" data-theme="{{ ui_theme|default:'dark' }}" data-accent="{{ ui_accent|default:'blue' }}">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{% block title %}Orbit{% endblock %} · Orbit</title>
+  <meta name="theme-color" content="{% if ui_theme == 'light' %}#ffffff{% else %}#010409{% endif %}">
+  <link rel="manifest" href="{% url 'manifest' %}">
+  <link rel="icon" href="{% static 'icons/icon-192.png' %}">
+  <link rel="apple-touch-icon" href="{% static 'icons/icon-192.png' %}">
+  <link rel="preload" href="{% static 'fonts/inter.woff2' %}" as="font" type="font/woff2" crossorigin>
+  <link rel="stylesheet" href="{% static 'css/orbit.css' %}">
+  {% block head %}{% endblock %}
+</head>
+<body class="min-h-screen">
+{% with path=request.path %}
+<a href="#main" class="sr-only focus:not-sr-only focus:fixed focus:left-4 focus:top-4 focus:z-50 btn">Skip to content</a>
+
+<!-- Icon rail (desktop) / bottom bar (mobile) -->
+<nav aria-label="Main" class="fixed z-40 border-line-soft bg-canvas/95 backdrop-blur
+  inset-x-0 bottom-0 h-16 border-t flex items-center justify-around px-2 sm:justify-center sm:gap-4
+  lg:justify-start lg:gap-1 lg:inset-y-0 lg:left-0 lg:right-auto lg:h-auto lg:w-[72px] lg:flex-col lg:border-t-0 lg:border-r lg:px-0 lg:py-4 lg:overflow-visible">
+  <a href="{% url 'dashboard' %}" class="hidden lg:grid h-11 w-11 place-items-center rounded-xl bg-accent/15 text-accent-hi mb-4" aria-label="Orbit home">
+    {% include "partials/icon.html" with name="orbit" cls="h-6 w-6" %}
+  </a>
+  <a class="rail-link {% if path == '/' %}active{% endif %}" href="{% url 'dashboard' %}" aria-label="Dashboard">{% include "partials/icon.html" with name="home" cls="h-5 w-5" %}<span class="rail-tip">Dashboard</span></a>
+  <a class="rail-link {% if '/projects/' in path %}active{% endif %}" href="{% url 'projects:list' %}" aria-label="Projects">{% include "partials/icon.html" with name="folder" cls="h-5 w-5" %}<span class="rail-tip">Projects</span></a>
+  <a class="rail-link {% if '/notes/' in path %}active{% endif %}" href="{% url 'notes:list' %}" aria-label="Notes">{% include "partials/icon.html" with name="note" cls="h-5 w-5" %}<span class="rail-tip">Notes</span></a>
+  <a class="rail-link {% if '/calendar/' in path %}active{% endif %}" href="{% url 'calendar' %}" aria-label="Calendar">{% include "partials/icon.html" with name="calendar" cls="h-5 w-5" %}<span class="rail-tip">Calendar</span></a>
+  <span class="hidden lg:block lg:my-3 lg:h-px lg:w-8 bg-line-soft" aria-hidden="true"></span>
+  <a class="rail-link {% if '/github/inbox/' in path %}active{% endif %}" href="{% url 'insights:inbox' %}" aria-label="Inbox">{% include "partials/icon.html" with name="inbox" cls="h-5 w-5" %}<span class="rail-tip">Inbox</span></a>
+  <a class="rail-link max-lg:hidden {% if '/github/activity/' in path %}active{% endif %}" href="{% url 'insights:activity' %}" aria-label="GitHub activity">{% include "partials/icon.html" with name="pulse" cls="h-5 w-5" %}<span class="rail-tip">Activity</span></a>
+  <a class="rail-link max-lg:hidden {% if path == '/github/' %}active{% endif %}" href="{% url 'insights:profile' %}" aria-label="GitHub profile">{% include "partials/icon.html" with name="github" cls="h-5 w-5" %}<span class="rail-tip">GitHub profile</span></a>
+  <a class="rail-link max-lg:hidden {% if '/github/analytics/' in path %}active{% endif %}" href="{% url 'insights:analytics' %}" aria-label="Analytics">{% include "partials/icon.html" with name="chart" cls="h-5 w-5" %}<span class="rail-tip">Analytics</span></a>
+
+  <div class="flex items-center lg:mt-auto lg:flex-col lg:gap-2">
+    <a class="rail-link max-lg:hidden {% if '/settings/' in path %}active{% endif %}" href="{% url 'settings' %}" aria-label="Settings">{% include "partials/icon.html" with name="settings" cls="h-5 w-5" %}<span class="rail-tip">Settings</span></a>
+    <details class="relative" data-menu>
+      <summary class="list-none cursor-pointer rounded-full ring-2 ring-transparent hover:ring-accent/50" aria-label="Account menu">
+        {% if user_avatar %}<img src="{{ user_avatar }}" alt="" class="h-9 w-9 rounded-full object-cover">
+        {% else %}<span class="grid h-9 w-9 place-items-center rounded-full bg-accent/20 text-sm font-semibold text-accent-hi">{{ user_display|first|upper }}</span>{% endif %}
+      </summary>
+      <div class="absolute bottom-14 right-0 w-64 lg:bottom-0 lg:left-14 lg:right-auto card bg-surface p-2 shadow-2xl z-50">
+        <div class="px-3 py-2">
+          <p class="truncate text-sm font-semibold">{{ user_display }}</p>
+          <p class="truncate text-xs text-muted">{{ user.email }}</p>
+        </div>
+        <div class="my-1 h-px bg-line-soft"></div>
+        <div class="lg:hidden">
+          <a href="{% url 'insights:activity' %}" class="flex items-center gap-2 rounded-lg px-3 py-2 text-sm text-fg hover:bg-raised">{% include "partials/icon.html" with name="pulse" %}GitHub activity</a>
+          <a href="{% url 'insights:profile' %}" class="flex items-center gap-2 rounded-lg px-3 py-2 text-sm text-fg hover:bg-raised">{% include "partials/icon.html" with name="github" %}GitHub profile</a>
+          <a href="{% url 'insights:analytics' %}" class="flex items-center gap-2 rounded-lg px-3 py-2 text-sm text-fg hover:bg-raised">{% include "partials/icon.html" with name="chart" %}Analytics</a>
+          <div class="my-1 h-px bg-line-soft"></div>
+        </div>
+        <a href="{% url 'settings' %}" class="flex items-center gap-2 rounded-lg px-3 py-2 text-sm text-fg hover:bg-raised">{% include "partials/icon.html" with name="settings" %}Settings</a>
+        <a href="{% url 'settings' %}?tab=appearance" class="flex items-center gap-2 rounded-lg px-3 py-2 text-sm text-fg hover:bg-raised">{% include "partials/icon.html" with name="palette" %}Appearance</a>
+        <a href="{% url 'settings' %}?tab=keys" class="flex items-center gap-2 rounded-lg px-3 py-2 text-sm text-fg hover:bg-raised">{% include "partials/icon.html" with name="key" %}Keys</a>
+        <a href="{% url 'terms' %}" class="flex items-center gap-2 rounded-lg px-3 py-2 text-sm text-fg hover:bg-raised">{% include "partials/icon.html" with name="book" %}Terms</a>
+        <a href="{% url 'privacy' %}" class="flex items-center gap-2 rounded-lg px-3 py-2 text-sm text-fg hover:bg-raised">{% include "partials/icon.html" with name="shield" %}Privacy</a>
+        <div class="my-1 h-px bg-line-soft"></div>
+        <form method="post" action="{% url 'account_logout' %}">{% csrf_token %}
+          <button class="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-sm text-danger hover:bg-danger/10 cursor-pointer">{% include "partials/icon.html" with name="logout" %}Sign out</button>
+        </form>
+      </div>
+    </details>
+  </div>
+</nav>
+
+<div class="lg:pl-[72px] pb-16 lg:pb-0 min-h-screen flex flex-col">
+  <header class="sticky top-0 z-30 border-b border-line-soft bg-canvas/80 backdrop-blur">
+    <div class="mx-auto flex h-16 max-w-[1600px] items-center gap-3 px-4 lg:px-8">
+      <a href="{% url 'dashboard' %}" class="lg:hidden text-accent-hi" aria-label="Orbit home">{% include "partials/icon.html" with name="orbit" cls="h-6 w-6" %}</a>
+      <button id="palette-open" class="flex flex-1 max-w-lg items-center gap-2.5 rounded-xl border border-line-soft bg-surface px-3.5 py-2 text-sm text-muted transition hover:border-line cursor-pointer">
+        {% include "partials/icon.html" with name="search" %}<span class="flex-1 text-left">Search or jump to…</span>
+        <kbd class="hidden sm:inline rounded-md bg-raised px-1.5 py-0.5 text-[11px] font-sans text-muted">Ctrl K</kbd>
+      </button>
+      <div class="ml-auto flex items-center gap-2">
+        {% if running_timer %}
+          <form method="post" action="{% url 'projects:timer_stop' %}" class="flex items-center gap-2 rounded-xl border border-ok/40 bg-ok/10 py-1 pl-3 pr-1">
+            {% csrf_token %}<input type="hidden" name="next" value="{{ request.get_full_path }}">
+            <span class="h-2 w-2 rounded-full bg-ok animate-pulse"></span>
+            <a href="{{ running_timer.project.get_absolute_url }}?tab=time" class="hidden sm:block max-w-28 truncate text-xs text-fg">{{ running_timer.project.name }}</a>
+            <span class="num text-sm" data-timer-start="{{ running_timer.started_at.isoformat }}">0:00:00</span>
+            <button class="btn btn-sm">Stop</button>
+          </form>
+        {% endif %}
+        <a href="{% url 'projects:create' %}" class="btn btn-primary">{% include "partials/icon.html" with name="plus" %}<span class="hidden sm:inline">New project</span></a>
+      </div>
+    </div>
+  </header>
+
+  <main id="main" class="mx-auto w-full max-w-[1600px] flex-1 px-4 py-8 lg:px-8">
+    {% include "partials/messages.html" %}
+    {% block content %}{% endblock %}
+  </main>
+  <footer class="mx-auto w-full max-w-[1600px] px-4 pb-6 lg:px-8 text-xs text-muted flex flex-wrap gap-4">
+    <span>© {% now "Y" %} lowdevco · Orbit</span>
+    <a href="{% url 'terms' %}" class="text-muted hover:text-fg">Terms</a>
+    <a href="{% url 'privacy' %}" class="text-muted hover:text-fg">Privacy</a>
+  </footer>
+</div>
+
+<!-- Command palette (Ctrl/Cmd + K) -->
+<div id="palette" class="fixed inset-0 z-50 hidden bg-canvas/70 backdrop-blur-sm p-4 pt-[12vh]" role="dialog" aria-modal="true" aria-label="Command palette">
+  <div class="mx-auto max-w-xl card shadow-2xl overflow-hidden">
+    <div class="flex items-center gap-3 border-b border-line-soft px-4">
+      {% include "partials/icon.html" with name="search" cls="h-4 w-4 text-muted" %}
+      <input id="palette-input" class="flex-1 bg-transparent py-3.5 text-sm outline-none" placeholder="Search projects, milestones, notes, tasks… or type a command" autocomplete="off" aria-label="Search">
+      <kbd class="rounded-md bg-raised px-1.5 py-0.5 text-[11px] text-muted">Esc</kbd>
+    </div>
+    <ul id="palette-results" class="max-h-80 overflow-y-auto p-1.5" role="listbox"></ul>
+  </div>
+</div>
+<script type="application/json" id="palette-nav">[
+  {"type":"Go","title":"Dashboard","url":"{% url 'dashboard' %}"},
+  {"type":"Go","title":"Projects","url":"{% url 'projects:list' %}"},
+  {"type":"Go","title":"New project","url":"{% url 'projects:create' %}"},
+  {"type":"Go","title":"Import from GitHub","url":"{% url 'projects:import' %}"},
+  {"type":"Go","title":"Notes","url":"{% url 'notes:list' %}"},
+  {"type":"Go","title":"New note","url":"{% url 'notes:create' %}"},
+  {"type":"Go","title":"Calendar","url":"{% url 'calendar' %}"},
+  {"type":"Go","title":"Inbox","url":"{% url 'insights:inbox' %}"},
+  {"type":"Go","title":"GitHub activity","url":"{% url 'insights:activity' %}"},
+  {"type":"Go","title":"GitHub profile","url":"{% url 'insights:profile' %}"},
+  {"type":"Go","title":"Git analytics","url":"{% url 'insights:analytics' %}"},
+  {"type":"Go","title":"Settings","url":"{% url 'settings' %}"},
+  {"type":"Go","title":"Settings: Keys","url":"{% url 'settings' %}?tab=keys"}
+]</script>
+{% endwith %}
+<script nonce="{{ csp_nonce }}">window.ORBIT = {searchUrl: "{% url 'search_json' %}", searchPage: "{% url 'search' %}", previewUrl: "{% url 'markdown_preview' %}", csrf: "{{ csrf_token }}"};</script>
+<script src="{% static 'js/orbit.js' %}" defer></script>
+{% block scripts %}{% endblock %}
+</body>
+</html>

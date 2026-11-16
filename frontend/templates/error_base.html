@@ -1,0 +1,30 @@
+{% load static %}<!DOCTYPE html>
+{# Standalone error layout. 500 pages render without request context, so nothing here may depend on it. #}
+<html lang="en" data-theme="{{ ui_theme|default:'dark' }}" data-accent="{{ ui_accent|default:'blue' }}">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="robots" content="noindex">
+  <title>{% block title %}{% endblock %} · Orbit</title>
+  <meta name="theme-color" content="{% if ui_theme == 'light' %}#ffffff{% else %}#010409{% endif %}">
+  <link rel="icon" href="{% static 'icons/icon-192.png' %}">
+  <link rel="stylesheet" href="{% static 'css/orbit.css' %}">
+</head>
+<body class="grid min-h-screen place-items-center overflow-hidden p-6">
+  <main class="relative w-full max-w-xl text-center">
+    <svg class="pointer-events-none absolute left-1/2 top-1/2 -z-10 h-[520px] w-[520px] -translate-x-1/2 -translate-y-1/2 text-accent/20" viewBox="0 0 200 200" fill="none" stroke="currentColor" stroke-width=".6" aria-hidden="true">
+      <ellipse cx="100" cy="100" rx="95" ry="40" transform="rotate(-25 100 100)"/>
+      <ellipse cx="100" cy="100" rx="68" ry="28" transform="rotate(-25 100 100)" stroke-dasharray="3 4"/>
+      <circle cx="186" cy="62" r="4" fill="currentColor" stroke="none"/>
+    </svg>
+    <a href="/" class="inline-flex items-center gap-2 text-fg">{% include "partials/icon.html" with name="orbit" cls="h-7 w-7 text-accent-hi" %}<span class="font-display text-xl font-semibold">Orbit</span></a>
+    <p class="num mt-10 bg-gradient-to-b from-fg to-muted bg-clip-text text-8xl font-semibold tracking-tight text-transparent sm:text-9xl">{% block code %}{% endblock %}</p>
+    <h1 class="mt-4 font-display text-2xl font-semibold">{% block heading %}{% endblock %}</h1>
+    <p class="mx-auto mt-2 max-w-md text-sm text-muted">{% block message %}{% endblock %}</p>
+    <div class="mt-8 flex flex-wrap justify-center gap-2">
+      <a href="/" class="btn btn-primary">{% include "partials/icon.html" with name="home" %}Back to dashboard</a>
+      {% block actions %}{% endblock %}
+    </div>
+  </main>
+</body>
+</html>

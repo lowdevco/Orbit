@@ -1,0 +1,82 @@
+{% extends "base.html" %}
+{% block title %}GitHub profile{% endblock %}
+{% block content %}
+{% if not viewer %}{% include "insights/_connect.html" %}{% else %}
+<!-- Developer card -->
+<section class="card relative mb-6 overflow-hidden">
+  <div class="h-24 bg-gradient-to-r from-accent/30 via-accent/10 to-transparent"></div>
+  <div class="px-6 pb-6 lg:px-8">
+    <div class="-mt-12 flex flex-wrap items-end gap-5">
+      <img src="{{ viewer.avatarUrl }}" alt="" class="h-24 w-24 rounded-2xl border-4 border-surface object-cover shadow-xl">
+      <div class="min-w-0 flex-1 pb-1">
+        <h1 class="font-display text-2xl font-semibold">{{ viewer.name|default:viewer.login }}</h1>
+        <p class="text-sm text-muted">@{{ viewer.login }}{% if viewer.location %} · {{ viewer.location }}{% endif %}{% if viewer.company %} · {{ viewer.company }}{% endif %}</p>
+      </div>
+      <div class="flex gap-2 pb-1">
+        <form method="post" action="{% url 'insights:refresh' %}">{% csrf_token %}<input type="hidden" name="next" value="insights:profile">
+          <button class="btn" aria-label="Refresh GitHub data">{% include "partials/icon.html" with name="refresh" %}</button></form>
+        <a href="{{ viewer.url }}" target="_blank" rel="noopener" class="btn">{% include "partials/icon.html" with name="github" %}Open on GitHub</a>
+      </div>
+    </div>
+    {% if viewer.bio %}<p class="mt-4 max-w-3xl text-sm">{{ viewer.bio }}</p>{% endif %}
+    {% if viewer.websiteUrl %}<p class="mt-1 text-sm"><a href="{{ viewer.websiteUrl }}" target="_blank" rel="noopener nofollow">{{ viewer.websiteUrl }}</a></p>{% endif %}
+
+    <div class="mt-6 grid grid-cols-2 gap-3 sm:grid-cols-3 xl:grid-cols-6">
+      <div class="rounded-xl bg-raised/60 p-3"><p class="num text-xl font-semibold">{{ viewer.repositories.totalCount }}</p><p class="text-xs text-muted">repositories</p></div>
+      <div class="rounded-xl bg-raised/60 p-3"><p class="num text-xl font-semibold">{{ s.stars }}</p><p class="text-xs text-muted">stars earned</p></div>
+      <div class="rounded-xl bg-raised/60 p-3"><p class="num text-xl font-semibold">{{ viewer.followers.totalCount }}</p><p class="text-xs text-muted">followers</p></div>
+      <div class="rounded-xl bg-raised/60 p-3"><p class="num text-xl font-semibold">{{ viewer.following.totalCount }}</p><p class="text-xs text-muted">following</p></div>
+      <div class="rounded-xl bg-raised/60 p-3"><p class="num text-xl font-semibold text-accent-hi">{{ s.total_contributions }}</p><p class="text-xs text-muted">contributions / yr</p></div>
+      <div class="rounded-xl bg-raised/60 p-3"><p class="num text-xl font-semibold">{{ s.current_streak }}d</p><p class="text-xs text-muted">current streak</p></div>
+    </div>
+
+    {% if s.languages %}
+    <div class="mt-6">
+      <div class="flex h-2 overflow-hidden rounded-full">
+        {% for l in s.languages %}<span style="width: {{ l.percent }}%; background: {{ l.color }}" title="{{ l.name }} {{ l.percent }}%"></span>{% endfor %}
+      </div>
+      <div class="mt-3 flex flex-wrap gap-x-5 gap-y-1 text-xs text-muted">
+        {% for l in s.languages %}<span class="flex items-center gap-1.5"><span class="h-2 w-2 rounded-full" style="background: {{ l.color }}"></span><span class="text-fg">{{ l.name }}</span> {{ l.percent }}%</span>{% endfor %}
+      </div>
+    </div>
+    {% endif %}
+  </div>
+</section>
+
+<!-- Repositories -->
+<div class="mb-4 flex flex-wrap items-center gap-3">
+  <h2 class="mr-auto font-display text-lg font-semibold">Repositories <span class="num text-muted">{{ repos|length }}</span></h2>
+  <form class="flex flex-wrap gap-2">
+    <select name="lang" class="input w-auto" data-autosubmit aria-label="Language">
+      <option value="">All languages</option>
+      {% for l in languages %}<option value="{{ l }}" {% if l == lang %}selected{% endif %}>{{ l }}</option>{% endfor %}
+    </select>
+    <select name="sort" class="input w-auto" data-autosubmit aria-label="Sort">
+      <option value="updated" {% if sort == "updated" %}selected{% endif %}>Recently updated</option>
+      <option value="stars" {% if sort == "stars" %}selected{% endif %}>Most stars</option>
+      <option value="name" {% if sort == "name" %}selected{% endif %}>Name</option>
+    </select>
+    <noscript><button class="btn">Apply</button></noscript>
+  </form>
+</div>
+<div class="grid gap-4 sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4">
+  {% for r in repos %}
+    <article class="card card-hover flex flex-col p-5">
+      <div class="flex items-start gap-2">
+        <a href="{{ r.url }}" target="_blank" rel="noopener" class="min-w-0 flex-1 truncate font-display font-semibold">{{ r.name }}</a>
+        {% if r.isPrivate %}<span class="badge badge-plain">Private</span>{% endif %}
+        {% if r.isFork %}<span class="badge badge-plain">Fork</span>{% endif %}
+      </div>
+      <p class="mt-2 line-clamp-2 min-h-10 text-sm text-muted">{{ r.description|default:"No description." }}</p>
+      <div class="mt-4 flex items-center gap-4 text-xs text-muted">
+        {% if r.primaryLanguage %}<span class="flex items-center gap-1.5"><span class="h-2.5 w-2.5 rounded-full" style="background: {{ r.lang_color }}"></span>{{ r.primaryLanguage.name }}</span>{% endif %}
+        <span class="flex items-center gap-1">{% include "partials/icon.html" with name="star" cls="h-3.5 w-3.5" %}{{ r.stargazerCount }}</span>
+        <span class="ml-auto">{{ r.updatedAt|slice:":10" }}</span>
+      </div>
+    </article>
+  {% empty %}
+    <p class="text-sm text-muted">No repositories.</p>
+  {% endfor %}
+</div>
+{% endif %}
+{% endblock %}

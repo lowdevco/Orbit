@@ -1,0 +1,22 @@
+{% extends "base.html" %}
+{% block title %}Edit milestone{% endblock %}
+{% block content %}
+<div class="mx-auto max-w-2xl">
+  <div class="page-head">
+    <div>
+      <p class="eyebrow"><a href="{{ project.get_absolute_url }}?tab=milestones">{{ project.name }}</a> · Milestone</p>
+      <h1 class="page-title">Edit milestone</h1>
+    </div>
+  </div>
+  <form method="post" class="card space-y-5 p-6">
+    {% csrf_token %}
+    {% include "partials/field.html" with field=form.title %}
+    {% include "partials/field.html" with field=form.due_date %}
+    {% include "partials/field.html" with field=form.description %}
+    <div class="flex gap-2 border-t border-line-soft pt-5">
+      <button class="btn btn-primary">Save milestone</button>
+      <a href="{{ project.get_absolute_url }}?tab=milestones" class="btn">Cancel</a>
+    </div>
+  </form>
+</div>
+{% endblock %}

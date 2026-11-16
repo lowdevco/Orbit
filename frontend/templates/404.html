@@ -1,0 +1,6 @@
+{% extends "error_base.html" %}
+{% block title %}Page not found{% endblock %}
+{% block code %}404{% endblock %}
+{% block heading %}Lost in orbit{% endblock %}
+{% block message %}This page drifted out of range. It may have been moved or deleted, or it belongs to another account.{% endblock %}
+{% block actions %}<a href="/projects/" class="btn">{% include "partials/icon.html" with name="folder" %}Your projects</a>{% endblock %}

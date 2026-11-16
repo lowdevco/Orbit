@@ -1,0 +1,52 @@
+{% extends "legal/base.html" %}
+{% block title %}Terms of Service{% endblock %}
+{% block heading %}Terms of Service{% endblock %}
+{% block body %}
+<p>These Terms govern your use of Orbit, a project, notes and GitHub dashboard operated by <strong>{{ operator }}</strong> ("we", "us"). By signing in or using Orbit you agree to these Terms and to our <a href="{% url 'privacy' %}">Privacy Policy</a>. If you do not agree, please do not use Orbit.</p>
+
+<h2>1. Eligibility</h2>
+<p>You must be at least 18 years old to use Orbit. If you are under 18, you may use Orbit only with the verifiable consent and supervision of a parent or lawful guardian, who accepts these Terms on your behalf.</p>
+
+<h2>2. Your account</h2>
+<ul>
+  <li>You sign in with Google or GitHub. Orbit does not store passwords.</li>
+  <li>You are responsible for activity under your account and for keeping your Google or GitHub account secure.</li>
+  <li>Tell us promptly at {{ email }} if you believe your account has been misused.</li>
+</ul>
+
+<h2>3. Your content</h2>
+<p>You own the projects, tasks, milestones, notes and other content you create in Orbit ("Your Content"). You give us a limited permission to store, process and display Your Content only so we can run Orbit for you. If you create a public share link for a project, anyone with that link can view that project's read-only page until you turn the link off.</p>
+
+<h2>4. GitHub integration</h2>
+<ul>
+  <li>When you connect GitHub or add a personal access token, Orbit calls the GitHub API on your behalf, within the permissions you granted, to show your profile, repositories, contributions, inbox and activity, to sync commits, and to create issues when you ask it to.</li>
+  <li>Your use of GitHub remains subject to GitHub's own terms. You can revoke Orbit's access at any time from your GitHub settings or from Orbit's Settings.</li>
+</ul>
+
+<h2>5. Acceptable use</h2>
+<p>You agree not to:</p>
+<ul>
+  <li>use Orbit for anything unlawful, or to store or share content that infringes others' rights;</li>
+  <li>try to access other users' data, or probe, scan or test the security of Orbit without our written permission;</li>
+  <li>get around rate limits or other protections, or overload the service with automated requests or scraping;</li>
+  <li>upload malware or use Orbit to send spam.</li>
+</ul>
+
+<h2>6. Availability and changes</h2>
+<p>Orbit is provided free of charge and "as is". We may change, pause or discontinue features at any time. We will try to give reasonable notice of major changes, and you can always export your data from Settings.</p>
+
+<h2>7. Termination</h2>
+<p>You can delete your account at any time in Settings › Account, which removes your data as described in the Privacy Policy. We may suspend or close accounts that break these Terms or put Orbit or its users at risk.</p>
+
+<h2>8. Disclaimers and limitation of liability</h2>
+<p>To the fullest extent permitted by applicable law, Orbit is provided without warranties of any kind, and {{ operator }} is not liable for indirect, incidental or consequential losses, or for loss of data or profits, arising from your use of Orbit. Nothing in these Terms limits liability that cannot be limited under Indian law.</p>
+
+<h2>9. Governing law</h2>
+<p>These Terms are governed by the laws of {{ country }}. Any dispute will be subject to the exclusive jurisdiction of the competent courts in {{ country }}.</p>
+
+<h2>10. Changes to these Terms</h2>
+<p>We may update these Terms from time to time. We will change the effective date above and, for material changes, notify you in the app. Continuing to use Orbit after an update means you accept the new Terms.</p>
+
+<h2>11. Contact</h2>
+<p>{{ operator }}, {{ country }} · <a href="mailto:{{ email }}">{{ email }}</a></p>
+{% endblock %}

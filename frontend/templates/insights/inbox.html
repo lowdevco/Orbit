@@ -1,0 +1,55 @@
+{% extends "base.html" %}
+{% block title %}Inbox{% endblock %}
+{% block content %}
+<div class="page-head">
+  <div>
+    <p class="eyebrow">GitHub</p>
+    <h1 class="page-title">Inbox</h1>
+    <p class="mt-1 text-sm text-muted">Everything on GitHub that's waiting on you, across all repositories.</p>
+  </div>
+  {% if inbox %}
+  <form method="post" action="{% url 'insights:refresh' %}">{% csrf_token %}<input type="hidden" name="next" value="insights:inbox">
+    <button class="btn">{% include "partials/icon.html" with name="refresh" %}Refresh</button></form>
+  {% endif %}
+</div>
+{% if not inbox %}{% include "insights/_connect.html" %}{% else %}
+<div class="grid gap-6 xl:grid-cols-[280px_1fr]">
+  <nav class="space-y-2" aria-label="Inbox sections">
+    {% for key, sec in sections.items %}
+      <a href="?tab={{ key }}" class="card flex items-center gap-3 p-4 text-fg hover:text-fg {% if key == tab %}border-accent/50 bg-accent/5{% else %}card-hover{% endif %}">
+        <span class="grid h-9 w-9 place-items-center rounded-xl {% if key == tab %}bg-accent/20 text-accent-hi{% else %}bg-raised text-muted{% endif %}">
+          {% if key == "assigned" %}{% include "partials/icon.html" with name="issue" %}{% else %}{% include "partials/icon.html" with name="pr" %}{% endif %}
+        </span>
+        <span class="flex-1 text-sm font-medium">{{ sec.0 }}</span>
+        <span class="num text-lg font-semibold {% if key == tab %}text-accent-hi{% endif %}">{{ sec.2|length }}</span>
+      </a>
+    {% endfor %}
+  </nav>
+  <section class="card">
+    <div class="card-header">{{ current.0 }}</div>
+    <p class="px-5 text-xs text-muted">{{ current.1 }}</p>
+    <ul class="space-y-1 p-3">
+      {% for it in current.2 %}
+        <li>
+          <a href="{{ it.html_url }}" target="_blank" rel="noopener" class="flex items-start gap-3 rounded-xl px-3 py-3 text-fg hover:bg-raised">
+            {% if it.pull_request %}{% include "partials/icon.html" with name="pr" cls="mt-0.5 h-4 w-4 text-purple" %}{% else %}{% include "partials/icon.html" with name="issue" cls="mt-0.5 h-4 w-4 text-ok" %}{% endif %}
+            <span class="min-w-0 flex-1">
+              <span class="block break-words text-sm font-medium">{{ it.title }}</span>
+              <span class="mt-1 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-muted">
+                <span>{{ it.repository_url|cut:"https://api.github.com/repos/" }} #{{ it.number }}</span>
+                <span>by {{ it.user.login }}</span>
+                <span>updated {{ it.updated_at|slice:":10" }}</span>
+                {% for l in it.labels|slice:":3" %}<span class="label-chip">{{ l.name }}</span>{% endfor %}
+                {% if it.comments %}<span>{{ it.comments }} comment{{ it.comments|pluralize }}</span>{% endif %}
+              </span>
+            </span>
+          </a>
+        </li>
+      {% empty %}
+        <li class="px-3 py-10 text-center text-sm text-muted">Nothing here. You're all caught up.</li>
+      {% endfor %}
+    </ul>
+  </section>
+</div>
+{% endif %}
+{% endblock %}

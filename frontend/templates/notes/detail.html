@@ -1,0 +1,23 @@
+{% extends "base.html" %}
+{% load orbit %}
+{% block title %}{{ note.title }}{% endblock %}
+{% block content %}
+<div class="mx-auto max-w-4xl">
+  <p class="text-sm text-muted"><a href="{% url 'notes:list' %}">Notes</a> /</p>
+  <div class="flex flex-wrap items-start justify-between gap-3 mb-4">
+    <h1 class="page-title break-words">{{ note.title }}{% if note.pinned %} <span class="badge badge-active align-middle text-xs">Pinned</span>{% endif %}</h1>
+    <div class="flex gap-2">
+      <form method="post" action="{% url 'notes:pin' note.pk %}">{% csrf_token %}<button class="btn">{% include "partials/icon.html" with name="pin" %}{% if note.pinned %}Unpin{% else %}Pin{% endif %}</button></form>
+      <a href="{% url 'notes:export' note.pk %}" class="btn">{% include "partials/icon.html" with name="download" %}.md</a>
+      <a href="{% url 'notes:edit' note.pk %}" class="btn">{% include "partials/icon.html" with name="edit" %}Edit</a>
+      <form method="post" action="{% url 'notes:delete' note.pk %}" data-confirm="Delete this note?">{% csrf_token %}<button class="btn btn-danger" aria-label="Delete note">{% include "partials/icon.html" with name="trash" %}</button></form>
+    </div>
+  </div>
+  <div class="flex flex-wrap items-center gap-2 mb-4 text-xs text-muted">
+    {% for t in note.tag_list %}<a href="{% url 'notes:list' %}?tag={{ t|urlencode }}" class="badge badge-muted no-underline">#{{ t }}</a>{% endfor %}
+    {% if note.project %}<span>Project: <a href="{{ note.project.get_absolute_url }}">{{ note.project.name }}</a></span>{% endif %}
+    <span>Updated {{ note.updated_at|timesince }} ago</span>
+  </div>
+  <article class="card card-body md">{% if note.body %}{{ note.body|markdown }}{% else %}<p class="text-muted">Empty note.</p>{% endif %}</article>
+</div>
+{% endblock %}

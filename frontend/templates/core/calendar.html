@@ -1,0 +1,79 @@
+{% extends "base.html" %}
+{% block title %}Calendar{% endblock %}
+{% block content %}
+<div class="page-head">
+  <div>
+    <p class="eyebrow">Plan</p>
+    <h1 class="page-title">{{ first|date:"F Y" }}</h1>
+  </div>
+  <div class="flex gap-2">
+    <a class="btn btn-icon" href="?month={{ prev }}" aria-label="Previous month">{% include "partials/icon.html" with name="chevron" cls="h-4 w-4 rotate-180" %}</a>
+    <a class="btn" href="{% url 'calendar' %}">Today</a>
+    <a class="btn btn-icon" href="?month={{ next }}" aria-label="Next month">{% include "partials/icon.html" with name="chevron" cls="h-4 w-4" %}</a>
+  </div>
+</div>
+
+<div class="grid gap-6 xl:grid-cols-[1fr_300px]">
+  <div>
+    <!-- Month grid (tablet and up) -->
+    <div class="card hidden overflow-hidden md:block">
+      <div class="grid grid-cols-7 border-b border-line-soft text-xs font-medium text-muted">
+        <div class="px-3 py-2.5">Mon</div><div class="px-3 py-2.5">Tue</div><div class="px-3 py-2.5">Wed</div><div class="px-3 py-2.5">Thu</div>
+        <div class="px-3 py-2.5">Fri</div><div class="px-3 py-2.5">Sat</div><div class="px-3 py-2.5">Sun</div>
+      </div>
+      {% for week in weeks %}
+        <div class="grid grid-cols-7 {% if not forloop.last %}border-b border-line-soft{% endif %}">
+          {% for day, items in week %}
+            <div class="group min-h-32 p-1.5 {% if not forloop.last %}border-r border-line-soft{% endif %} {% if day.month != first.month %}opacity-40{% endif %}">
+              <div class="mb-1 flex items-center justify-between">
+                {% if has_projects %}<button type="button" class="btn btn-ghost btn-sm btn-icon h-6 w-6 opacity-0 group-hover:opacity-100 focus:opacity-100" data-fill-date="{{ day|date:'Y-m-d' }}" aria-label="Add task on {{ day|date:'M j' }}">{% include "partials/icon.html" with name="plus" cls="h-3.5 w-3.5" %}</button>{% else %}<span></span>{% endif %}
+                <span class="num grid h-6 w-6 place-items-center rounded-full text-xs {% if day == today %}bg-accent font-semibold text-on-accent{% else %}text-muted{% endif %}">{{ day.day }}</span>
+              </div>
+              <ul class="space-y-1">
+                {% for it in items %}<li>{% include "core/_calendar_item.html" %}</li>{% endfor %}
+              </ul>
+            </div>
+          {% endfor %}
+        </div>
+      {% endfor %}
+    </div>
+
+    <!-- Agenda (phones) -->
+    <div class="space-y-3 md:hidden">
+      {% for week in weeks %}{% for day, items in week %}
+        {% if day.month == first.month and items or day == today %}
+          <section class="card p-4">
+            <p class="mb-2 flex items-center gap-2 text-sm font-semibold {% if day == today %}text-accent-hi{% endif %}">{{ day|date:"l, M j" }}{% if day == today %}<span class="badge badge-active">Today</span>{% endif %}</p>
+            <ul class="space-y-1.5">
+              {% for it in items %}<li>{% include "core/_calendar_item.html" %}</li>{% empty %}<li class="text-sm text-muted">Nothing scheduled.</li>{% endfor %}
+            </ul>
+          </section>
+        {% endif %}
+      {% endfor %}{% endfor %}
+    </div>
+  </div>
+
+  <aside class="space-y-6">
+    {% if has_projects %}
+    <form method="post" action="{% url 'calendar_add' %}" class="card space-y-3 p-5" id="calendar-add">
+      {% csrf_token %}
+      <p class="font-display font-semibold">Schedule a task</p>
+      {% include "partials/field.html" with field=add_form.title %}
+      {% include "partials/field.html" with field=add_form.project %}
+      <div class="grid grid-cols-2 gap-3">
+        {% include "partials/field.html" with field=add_form.due_date %}
+        {% include "partials/field.html" with field=add_form.priority %}
+      </div>
+      <button class="btn btn-primary w-full">{% include "partials/icon.html" with name="plus" %}Add to calendar</button>
+    </form>
+    {% endif %}
+    <div class="card space-y-2.5 p-5 text-sm">
+      <p class="font-display font-semibold">Legend</p>
+      <p class="flex items-center gap-2 text-muted"><span class="text-accent-hi">{% include "partials/icon.html" with name="milestone" cls="h-4 w-4" %}</span>Milestone due</p>
+      <p class="flex items-center gap-2 text-muted"><span class="text-warn">{% include "partials/icon.html" with name="flag" cls="h-4 w-4" %}</span>Project target date</p>
+      <p class="flex items-center gap-2 text-muted"><span class="ml-1 mr-1 h-2 w-2 rounded-full bg-muted"></span>Task (priority shown as a flag)</p>
+      <p class="pt-1 text-xs text-muted">Click any item to open it. Changes to due dates show up here automatically.</p>
+    </div>
+  </aside>
+</div>
+{% endblock %}
