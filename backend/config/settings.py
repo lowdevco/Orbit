@@ -88,7 +88,7 @@ if config("DB_ENGINE", default="") == "mysql":
 
     DATABASES = {
         "default": {
-            "ENGINE": "django.db.backends.mysql",
+            "ENGINE": "config.tidb",
             "NAME": config("DB_NAME", default="orbit"),
             "USER": config("DB_USER", default="root"),
             "PASSWORD": config("DB_PASSWORD", default=""),
