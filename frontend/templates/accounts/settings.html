@@ -130,13 +130,38 @@
           {% include "partials/field.html" with field=key_form.key %}
           <button class="btn btn-primary">Verify & save key</button>
         </form>
-        <details class="mt-5 text-sm">
-          <summary class="cursor-pointer text-accent-hi">How to create a key</summary>
-          <ol class="mt-3 list-decimal space-y-1 pl-5 text-muted">
-            <li>Open <a href="https://github.com/settings/tokens" target="_blank" rel="noopener">github.com/settings/tokens</a> → <em>Generate new token (classic)</em>.</li>
-            <li>Scopes: <code>read:user</code>, <code>user:email</code>, plus <code>repo</code> (private repos and issues) or <code>public_repo</code> (public only).</li>
-            <li>Paste it above. Orbit checks it with GitHub, then stores it encrypted. It is never shown again.</li>
-          </ol>
+        <details class="mt-5 text-sm" open>
+          <summary class="cursor-pointer text-accent-hi">How to create a key (checklist for full access)</summary>
+          <div class="mt-3 grid gap-3 sm:grid-cols-2">
+            <div class="rounded-xl bg-raised/50 p-4">
+              <p class="font-medium">Fine-grained token <span class="text-muted">(recommended)</span></p>
+              <ol class="mt-2 list-decimal space-y-1 pl-5 text-muted">
+                <li>Open <a href="https://github.com/settings/personal-access-tokens/new" target="_blank" rel="noopener">github.com/settings/personal-access-tokens/new</a>.</li>
+                <li><span class="text-fg">Resource owner:</span> you (or the organization that owns the repos).</li>
+                <li><span class="text-fg">Repository access:</span> All repositories.</li>
+                <li><span class="text-fg">Repository permissions:</span>
+                  <ul class="mt-1 list-disc space-y-0.5 pl-5">
+                    <li>Metadata: Read-only (set automatically)</li>
+                    <li>Contents: Read-only (commits, README)</li>
+                    <li>Issues: Read and write (issue list, creating issues)</li>
+                    <li>Pull requests: Read-only (PRs, inbox)</li>
+                  </ul>
+                </li>
+                <li>Leave account permissions at their defaults.</li>
+              </ol>
+              <p class="mt-2 text-xs text-muted">Missing one of these shows "Resource not accessible by personal access token". Edit the token on GitHub to add it; it keeps working without being pasted again.</p>
+            </div>
+            <div class="rounded-xl bg-raised/50 p-4">
+              <p class="font-medium">Classic token</p>
+              <ol class="mt-2 list-decimal space-y-1 pl-5 text-muted">
+                <li>Open <a href="https://github.com/settings/tokens/new" target="_blank" rel="noopener">github.com/settings/tokens/new</a>.</li>
+                <li>Tick <code>repo</code> (whole group), <code>read:user</code> and <code>user:email</code>.</li>
+                <li>Add <code>read:org</code> if your repos live in an organization.</li>
+              </ol>
+              <p class="mt-2 text-xs text-muted">Organizations with SSO: click <em>Configure SSO → Authorize</em> next to the token.</p>
+            </div>
+          </div>
+          <p class="mt-3 text-muted">Paste it above. Orbit checks it with GitHub, then stores it encrypted. It is never shown again.</p>
         </details>
       </section>
 
