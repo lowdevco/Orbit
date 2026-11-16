@@ -49,6 +49,12 @@ class Migration(migrations.Migration):
         migrations.AddField(
             model_name='task',
             name='milestone',
+            # TiDB can't add a column and its FK in one ALTER, so add the column first, then the constraint.
+            field=models.ForeignKey(blank=True, null=True, db_constraint=False, on_delete=django.db.models.deletion.SET_NULL, related_name='tasks', to='projects.milestone'),
+        ),
+        migrations.AlterField(
+            model_name='task',
+            name='milestone',
             field=models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.SET_NULL, related_name='tasks', to='projects.milestone'),
         ),
     ]

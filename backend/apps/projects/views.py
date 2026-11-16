@@ -42,8 +42,13 @@ def sync_commits(project, force=False):
         return 0
     token = client.get_token(project.owner)
     commits = client.recent_commits(token, project.github_repo, since=project.github_synced_at)
+    # MySQL/TiDB skip the conditional unique constraint, so dedupe here instead of relying on ignore_conflicts.
+    seen = set(project.updates.filter(github_sha__in=[c["sha"] for c in commits]).values_list("github_sha", flat=True))
     updates = []
     for c in commits:
+        if c["sha"] in seen:
+            continue
+        seen.add(c["sha"])
         message = c["commit"]["message"].strip()
         title, _, body = message.partition("\n")
         updates.append(
