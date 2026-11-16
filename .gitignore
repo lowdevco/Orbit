@@ -147,3 +147,5 @@ GitHub.sublime-settings
 
 # misc #
 DRAFT.md
+staticfiles/
+backend/staticfiles/
