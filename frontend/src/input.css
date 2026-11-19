@@ -254,3 +254,24 @@ html[data-theme="light"] {
 @keyframes toast-in { from { opacity: 0; transform: translateY(8px) scale(0.98); } }
 @keyframes toast-out { to { opacity: 0; transform: translateY(8px) scale(0.98); } }
 @media (prefers-reduced-motion: reduce) { .toast, .toast.leaving { animation: none; } }
+
+/* Kanban card outline follows task priority. Unlayered so it beats the border utilities. */
+.kanban-card[data-prio="1"] { border-color: color-mix(in oklab, var(--color-muted) 55%, transparent); }
+.kanban-card[data-prio="2"] { border-color: color-mix(in oklab, var(--color-accent-hi) 55%, transparent); }
+.kanban-card[data-prio="3"] { border-color: color-mix(in oklab, var(--color-warn) 65%, transparent); }
+.kanban-card[data-prio="4"] { border-color: color-mix(in oklab, var(--color-danger) 70%, transparent); }
+
+/* Timeline task entries: dot and left edge follow the task's live status. */
+.tl-dot { position: absolute; left: -5px; top: 1rem; height: 0.625rem; width: 0.625rem; border-radius: 9999px; box-shadow: 0 0 0 4px var(--color-canvas); background: var(--color-muted); }
+.tl-doing { background: var(--color-accent); animation: tl-pulse 2s ease-in-out infinite; }
+.tl-done { background: var(--color-ok); }
+@keyframes tl-pulse { 50% { box-shadow: 0 0 0 4px var(--color-canvas), 0 0 0 7px color-mix(in oklab, var(--color-accent) 35%, transparent); } }
+.tl-task { border-left: 3px solid var(--color-line-soft); transition: border-color .2s, opacity .2s; }
+.tl-task-doing { border-left-color: var(--color-accent); }
+.tl-task-done { border-left-color: var(--color-ok); opacity: .75; }
+.tl-task-done:hover { opacity: 1; }
+.tl-check { display: grid; place-items: center; margin-top: 1px; height: 1.125rem; width: 1.125rem; border-radius: 9999px; border: 1.5px solid var(--color-line); color: var(--color-canvas); transition: background .15s, border-color .15s, transform .15s; }
+.tl-check:hover { border-color: var(--color-ok); transform: scale(1.1); }
+.tl-task-done .tl-check { background: var(--color-ok); border-color: var(--color-ok); }
+.tl-task-doing .tl-check { border-color: var(--color-accent); }
+@media (prefers-reduced-motion: reduce) { .tl-doing { animation: none; } }

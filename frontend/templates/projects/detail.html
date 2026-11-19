@@ -65,7 +65,7 @@
 
     <section>
       <div class="mb-3 flex items-center justify-between">
-        <h2 class="font-display text-lg font-semibold">Timeline</h2>
+        <h2 id="timeline" class="scroll-mt-20 font-display text-lg font-semibold">Timeline</h2>
         {% if project.github_repo %}
         <form method="post" action="{% url 'projects:sync' project.slug %}">{% csrf_token %}
           <button class="btn btn-ghost btn-sm">{% include "partials/icon.html" with name="refresh" cls="h-3.5 w-3.5" %}Sync commits</button></form>
@@ -74,6 +74,37 @@
       {% if updates %}
       <ol class="relative ml-3 space-y-4 border-l border-line-soft">
         {% for u in updates %}
+          {% ifchanged u.created_at|date:"Ymd" %}
+            <li class="relative -ml-3 pt-2 first:pt-0"><span class="relative z-10 inline-block rounded-full bg-raised px-2.5 py-0.5 text-[11px] font-medium uppercase tracking-wide text-muted">{% if u.created_at|date:"Ymd" == today|date:"Ymd" %}Today{% elif u.created_at|date:"Ymd" == yesterday|date:"Ymd" %}Yesterday{% else %}{{ u.created_at|date:"D, M j" }}{% endif %}</span></li>
+          {% endifchanged %}
+          {% if u.status %}
+          {# A task: one entry at creation; its badge always shows the current status. #}
+          <li class="relative pl-6">
+            <span class="tl-dot tl-{{ u.status }}"></span>
+            <div class="card tl-task tl-task-{{ u.status }}" data-prio="{{ u.priority }}">
+              <div class="flex items-start gap-3 px-4 py-3">
+                <form method="post" action="{% url 'projects:task_toggle' project.slug u.pk %}">{% csrf_token %}
+                  <input type="hidden" name="next" value="{{ request.get_full_path }}#timeline">
+                  <button class="tl-check" aria-label="{% if u.status == 'done' %}Mark as not done{% else %}Mark as done{% endif %}" title="{% if u.status == 'done' %}Reopen{% else %}Mark done{% endif %}">{% if u.status == 'done' %}{% include "partials/icon.html" with name="check" cls="h-3 w-3" %}{% endif %}</button>
+                </form>
+                <div class="min-w-0 flex-1">
+                  <p class="break-words text-sm font-medium {% if u.status == 'done' %}text-muted line-through decoration-muted/50{% endif %}">
+                    <a href="{% url 'projects:task_edit' project.slug u.pk %}" class="text-inherit hover:text-accent-hi">{{ u.title }}</a>
+                  </p>
+                  <p class="mt-1 flex flex-wrap items-center gap-x-2 gap-y-1 text-xs text-muted">
+                    <span class="badge {% if u.status == 'done' %}badge-done{% elif u.status == 'doing' %}badge-active{% else %}badge-muted{% endif %}">{{ u.get_status_display }}</span>
+                    {% if u.priority %}<span class="inline-flex items-center gap-1 prio-{{ u.priority }}">{% include "partials/icon.html" with name="flag" cls="h-3 w-3" %}{{ u.get_priority_display }}</span>{% endif %}
+                    {% if u.milestone %}<span class="inline-flex items-center gap-1">{% include "partials/icon.html" with name="milestone" cls="h-3 w-3" %}{{ u.milestone.title }}</span>{% endif %}
+                    {% for l in u.label_list %}<span class="label-chip">{{ l }}</span>{% endfor %}
+                    {% if u.due_date %}<span class="{% if u.is_overdue %}text-danger{% endif %}">Due {{ u.due_date|date:"M j" }}</span>{% endif %}
+                    <span>· added <time datetime="{{ u.created_at.isoformat }}" title="{{ u.created_at }}">{{ u.created_at|timesince }} ago</time></span>
+                    {% if u.completed_at %}<span class="text-ok">· done in {{ u.created_at|timesince:u.completed_at }}</span>{% endif %}
+                  </p>
+                </div>
+              </div>
+            </div>
+          </li>
+          {% else %}
           <li class="relative pl-6">
             <span class="absolute -left-[5px] top-4 h-2.5 w-2.5 rounded-full ring-4 ring-canvas {% if u.source == 'github' %}bg-muted{% else %}bg-accent{% endif %}"></span>
             <div class="card">
@@ -91,6 +122,7 @@
               {% if u.body %}<div class="md border-t border-line-soft px-4 py-3">{{ u.body|markdown }}</div>{% endif %}
             </div>
           </li>
+          {% endif %}
         {% endfor %}
       </ol>
       {% else %}
@@ -208,7 +240,7 @@
       </div>
       <div class="flex-1 space-y-2 p-3 pt-0" data-cards>
         {% for t in tasks %}
-          <article class="kanban-card group cursor-grab rounded-xl border border-line-soft bg-raised/70 p-3 transition hover:border-line active:cursor-grabbing" draggable="true" data-move-url="{% url 'projects:task_move' project.slug t.pk %}">
+          <article data-prio="{{ t.priority }}" class="kanban-card group cursor-grab rounded-xl border border-line-soft bg-raised/70 p-3 transition hover:border-line active:cursor-grabbing" draggable="true" data-move-url="{% url 'projects:task_move' project.slug t.pk %}">
             <div class="flex items-start gap-2">
               {% if t.priority %}<span class="mt-0.5 prio-{{ t.priority }}" title="{{ t.get_priority_display }} priority">{% include "partials/icon.html" with name="flag" cls="h-3.5 w-3.5" %}</span>{% endif %}
               <a href="{% url 'projects:task_edit' project.slug t.pk %}" class="min-w-0 flex-1 break-words text-sm text-fg hover:text-accent-hi {% if t.status == 'done' %}line-through text-muted{% endif %}" data-title>{{ t.title }}</a>

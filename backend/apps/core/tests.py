@@ -2,7 +2,7 @@ from datetime import date, timedelta
 from unittest import mock
 
 from django.contrib.auth import get_user_model
-from django.test import TestCase
+from django.test import SimpleTestCase, TestCase
 
 from apps.accounts.models import Profile
 from apps.core.markdown import render
@@ -412,3 +412,26 @@ class ImportAndActivityTests(Base):
     def test_safe_color(self):
         self.assertEqual(stats.safe_color("#f1e05a"), "#f1e05a")
         self.assertEqual(stats.safe_color("red;x"), "#7d8590")
+
+
+class MarkdownTests(SimpleTestCase):
+    def test_lists_without_blank_line_and_line_breaks(self):
+        from apps.core.markdown import render
+
+        html = render("Site\n- Domain: a.com\n- User: b\n\nOne\nTwo\n```\n- not a list\n```")
+        self.assertIn("<li>Domain: a.com</li>", html)
+        self.assertIn("One<br", html)
+        self.assertIn("<pre><code>- not a list", html)
+
+
+class TimelineTasksTests(Base):
+    def test_task_shows_once_with_live_status(self):
+        task = Task.objects.create(project=self.project, title="Ship payroll")
+        url = self.project.get_absolute_url()
+        self.assertContains(self.client.get(url), "Ship payroll", count=1)
+        self.client.post(f"{url}tasks/{task.pk}/toggle/".replace("//", "/"))
+        task.refresh_from_db()
+        self.assertEqual(task.status, "done")
+        resp = self.client.get(url)
+        self.assertContains(resp, "Ship payroll", count=1)
+        self.assertContains(resp, "tl-task-done")

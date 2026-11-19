@@ -135,8 +135,14 @@ def project_detail(request, slug):
             except GitHubError as e:
                 ctx["github_error"] = str(e)
         ctx.update(
-            updates=project.updates.all()[:50],
+            # Tasks appear once, at creation, showing their current status; status changes never add entries.
+            updates=sorted(
+                [*project.updates.all()[:50], *project.tasks.select_related("milestone").order_by("-created_at")[:50]],
+                key=lambda e: e.created_at, reverse=True,
+            )[:50],
             milestones=project.milestones.prefetch_related("tasks"),
+            today=timezone.localdate(),
+            yesterday=timezone.localdate() - timedelta(days=1),
             update_form=UpdateForm(),
             link_form=LinkForm(),
             issue_form=IssueForm(),
