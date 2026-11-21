@@ -12,6 +12,9 @@ class StyledFormMixin:
             w = field.widget
             if isinstance(w, forms.CheckboxInput):
                 w.attrs.setdefault("class", "checkbox")
+            elif isinstance(w, forms.Select) and not w.allow_multiple_selected:
+                w.attrs.setdefault("class", "input")
+                w.attrs.setdefault("data-orbit-select", "")  # themed dropdown: static/js/components/select.js
             elif isinstance(w, forms.Textarea):
                 w.attrs.setdefault("class", "input font-mono text-sm")
                 w.attrs.setdefault("rows", 8)

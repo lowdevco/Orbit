@@ -250,7 +250,7 @@
       $$("[data-progress-bar]").forEach((el) => (el.style.width = `${data.progress}%`));
       card.querySelector("[data-title]")?.classList.toggle("line-through", status === "done");
       const sel = card.querySelector("select[data-status-select]");
-      if (sel) sel.value = status;
+      if (sel) { sel.value = status; sel.dispatchEvent(new Event("orbit:sync")); }
     };
 
     $$(".kanban-card").forEach((card) => {

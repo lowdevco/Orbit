@@ -1,7 +1,7 @@
 {% load static %}// Orbit service worker: cache the app shell, network-first for pages, offline fallback.
 const CACHE = "orbit-v2";
 const SHELL = [
-  "{% static 'css/orbit.css' %}", "{% static 'js/orbit.js' %}", "{% static 'icons/icon-192.png' %}",
+  "{% static 'css/orbit.css' %}", "{% static 'js/orbit.js' %}", "{% static 'js/components/select.js' %}", "{% static 'icons/icon-192.png' %}",
   "{% static 'fonts/inter.woff2' %}", "{% static 'fonts/space-grotesk.woff2' %}", "/offline/",
 ];
 

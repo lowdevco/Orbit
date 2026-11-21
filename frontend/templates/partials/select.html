@@ -1,0 +1,20 @@
+{% comment %}
+Orbit select component (enhanced by static/js/components/select.js). Form fields get it automatically from StyledFormMixin;
+use this include for hand-written selects:
+
+  {% include "partials/select.html" with name="sort" options=sort_options value=sort label="Sort" %}
+
+  name         form field name (omit for selects that only drive JS)
+  options      list of (value, label) pairs, e.g. Model.STATUS_CHOICES
+  value        the selected value (compared as text)
+  label        accessible name (aria-label); required when there is no visible <label>
+  placeholder  optional first option with an empty value, e.g. "All languages"
+  cls          classes for the control; default "input"
+  id           optional, to pair with a <label for="...">
+  autosubmit   submit the form when the value changes
+  status_select  kanban card status (static/js/orbit.js)
+{% endcomment %}
+<select{% if name %} name="{{ name }}"{% endif %}{% if id %} id="{{ id }}"{% endif %} class="{{ cls|default:'input' }}" data-orbit-select{% if label %} aria-label="{{ label }}"{% endif %}{% if autosubmit %} data-autosubmit{% endif %}{% if status_select %} data-status-select{% endif %}>
+  {% if placeholder %}<option value="">{{ placeholder }}</option>{% endif %}
+  {% for v, l in options %}<option value="{{ v }}"{% if v|stringformat:"s" == value|stringformat:"s" %} selected{% endif %}>{{ l }}</option>{% endfor %}
+</select>

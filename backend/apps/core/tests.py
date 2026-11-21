@@ -435,3 +435,31 @@ class TimelineTasksTests(Base):
         resp = self.client.get(url)
         self.assertContains(resp, "Ship payroll", count=1)
         self.assertContains(resp, "tl-task-done")
+
+
+class SelectComponentTests(SimpleTestCase):
+    def test_partial_marks_selected_and_placeholder(self):
+        from django.template.loader import render_to_string
+
+        html = render_to_string(
+            "partials/select.html",
+            {"name": "sort", "options": [(1, "One"), (2, "Two")], "value": "2", "placeholder": "Any", "label": "Sort", "autosubmit": True},
+        )
+        self.assertIn('data-orbit-select', html)
+        self.assertIn('data-autosubmit', html)
+        self.assertIn('<option value="">Any</option>', html)
+        self.assertIn('<option value="2" selected>Two</option>', html)
+        self.assertNotIn('<option value="1" selected', html)
+
+    def test_styled_forms_use_component_for_single_selects(self):
+        from django import forms
+
+        from apps.core.forms import StyledFormMixin
+
+        class F(StyledFormMixin, forms.Form):
+            one = forms.ChoiceField(choices=[("a", "A")])
+            many = forms.MultipleChoiceField(choices=[("a", "A")])
+
+        f = F()
+        self.assertIn("data-orbit-select", f.fields["one"].widget.attrs)
+        self.assertNotIn("data-orbit-select", f.fields["many"].widget.attrs)

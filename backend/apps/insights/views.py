@@ -45,7 +45,8 @@ def profile(request):
             "repos": repos,
             "sort": sort,
             "lang": lang,
-            "languages": sorted({r["primaryLanguage"]["name"] for r in all_repos if r["primaryLanguage"]}),
+            "language_options": [(l, l) for l in sorted({r["primaryLanguage"]["name"] for r in all_repos if r["primaryLanguage"]})],
+            "sort_options": [("updated", "Recently updated"), ("stars", "Most stars"), ("name", "Name")],
             "s": s,
         },
     )

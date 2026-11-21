@@ -47,15 +47,8 @@
 <div class="mb-4 flex flex-wrap items-center gap-3">
   <h2 class="mr-auto font-display text-lg font-semibold">Repositories <span class="num text-muted">{{ repos|length }}</span></h2>
   <form class="flex flex-wrap gap-2">
-    <select name="lang" class="input w-auto" data-autosubmit aria-label="Language">
-      <option value="">All languages</option>
-      {% for l in languages %}<option value="{{ l }}" {% if l == lang %}selected{% endif %}>{{ l }}</option>{% endfor %}
-    </select>
-    <select name="sort" class="input w-auto" data-autosubmit aria-label="Sort">
-      <option value="updated" {% if sort == "updated" %}selected{% endif %}>Recently updated</option>
-      <option value="stars" {% if sort == "stars" %}selected{% endif %}>Most stars</option>
-      <option value="name" {% if sort == "name" %}selected{% endif %}>Name</option>
-    </select>
+    {% include "partials/select.html" with name="lang" options=language_options value=lang placeholder="All languages" label="Language" cls="input w-auto" autosubmit=True %}
+    {% include "partials/select.html" with name="sort" options=sort_options value=sort label="Sort" cls="input w-auto" autosubmit=True %}
     <noscript><button class="btn">Apply</button></noscript>
   </form>
 </div>

@@ -128,6 +128,7 @@
 ]</script>
 {% endwith %}
 <script nonce="{{ csp_nonce }}">window.ORBIT = {searchUrl: "{% url 'search_json' %}", searchPage: "{% url 'search' %}", previewUrl: "{% url 'markdown_preview' %}", csrf: "{{ csrf_token }}"};</script>
+<script src="{% static 'js/components/select.js' %}" defer></script>
 <script src="{% static 'js/orbit.js' %}" defer></script>
 {% block scripts %}{% endblock %}
 </body>

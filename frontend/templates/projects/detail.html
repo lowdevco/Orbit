@@ -226,7 +226,7 @@
 <form method="post" action="{% url 'projects:task_add' project.slug %}" class="card mb-6 grid gap-2 p-3 md:grid-cols-[1fr_auto_auto_auto_auto]">
   {% csrf_token %}
   {{ task_form.title }}
-  <select name="priority" class="input md:w-32" aria-label="Priority">{% for v, l in task_form.fields.priority.choices %}<option value="{{ v }}">{% if v == 0 %}Priority{% else %}{{ l }}{% endif %}</option>{% endfor %}</select>
+  {{ task_form.priority }}
   {{ task_form.milestone }}
   <input name="due_date" type="date" class="input md:w-40" aria-label="Due date">
   <button class="btn btn-primary">{% include "partials/icon.html" with name="plus" %}Add task</button>
@@ -254,9 +254,7 @@
             <div class="mt-2.5 flex items-center gap-2">
               {% if t.due_date %}<span class="text-xs {% if t.is_overdue %}text-danger{% else %}text-muted{% endif %}">{{ t.due_date|date:"M j" }}</span>{% endif %}
               {% if t.description %}<span class="text-muted" title="Has description">{% include "partials/icon.html" with name="note" cls="h-3 w-3" %}</span>{% endif %}
-              <select class="ml-auto rounded-lg border border-line-soft bg-canvas px-1.5 py-0.5 text-xs text-muted" data-status-select aria-label="Move task">
-                {% for k, l in t.STATUS_CHOICES %}<option value="{{ k }}" {% if k == t.status %}selected{% endif %}>{{ l }}</option>{% endfor %}
-              </select>
+              {% include "partials/select.html" with options=t.STATUS_CHOICES value=t.status label="Move task" cls="ml-auto rounded-lg border border-line-soft bg-canvas px-1.5 py-0.5 text-xs text-muted" status_select=True %}
               <form method="post" action="{% url 'projects:task_delete' project.slug t.pk %}">{% csrf_token %}
                 <input type="hidden" name="next" value="{{ base }}?tab=board">
                 <button class="btn btn-ghost btn-sm btn-icon opacity-60 group-hover:opacity-100" aria-label="Delete task">{% include "partials/icon.html" with name="trash" cls="h-3.5 w-3.5" %}</button></form>

@@ -74,6 +74,11 @@ class TaskForm(ProjectScopedMixin, StyledFormMixin, forms.ModelForm):
 
 
 class QuickTaskForm(ProjectScopedMixin, StyledFormMixin, forms.ModelForm):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields["priority"].choices = [(0, "Priority"), *Task.PRIORITY_CHOICES[1:]]
+        self.fields["priority"].widget.attrs.update({"class": "input md:w-32", "aria-label": "Priority"})
+
     class Meta:
         model = Task
         fields = ["title", "priority", "milestone", "due_date"]
